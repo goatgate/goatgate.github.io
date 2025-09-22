@@ -4,7 +4,8 @@ description: "Using a decommissioned Alibaba cloud accelerator card as an FPGA d
 summary: "No documentation, no problem!"
 tags: ["fpga", "ebay", "debugging", "linux", "hacking"]
 date: 2025-09-02
-draft": true"
+draft: true
+showTableOfContentse: true
 ---
 
 # Introduction
@@ -1150,7 +1151,7 @@ Info : Listening on port 4444 for telnet connections
 ```
 Restulting in a sucessful flashing of our FPGA. 
 
-I will spare you the christmas light demonstration video and will come back to edit this 
+I will spare you yet another christmas light demonstration video and will come back to edit this 
 article if I spot any issues with the pinnout for the PCIe and SFP+ in the future. 
 
 If we where to take example on the Vivado generated programming sequence in the SVF file, 
