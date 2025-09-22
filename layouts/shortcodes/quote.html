@@ -1,0 +1,206 @@
+{{/*
+  Multiline Quote Shortcode for Hugo Blowfish
+  
+  Usage:
+  {{< quote author="Author Name" source="Source Title" cite="https://example.com" >}}
+  ## Your Title Here
+  
+  Your quote content with **bold**, *italic*, and other markdown.
+  
+  - Bullet point 1
+  - Bullet point 2
+    - Nested bullet
+  
+  1. Numbered lists work too
+  2. Second item
+  
+  > Even nested blockquotes!
+  {{< /quote >}}
+  
+  Parameters:
+  - author: (optional) Name of the person being quoted
+  - source: (optional) Source publication, book, etc.
+  - cite: (optional) URL for citation link
+  - class: (optional) Additional CSS classes
+*/}}
+
+{{- $author := .Get "author" -}}
+{{- $source := .Get "source" -}}
+{{- $cite := .Get "cite" -}}
+{{- $class := .Get "class" -}}
+{{- $content := .Inner | markdownify -}}
+
+<blockquote class="quote{{ with $class }} {{ . }}{{ end }}">
+  <div class="quote-content">
+    {{ $content }}
+  </div>
+  
+  {{- if or $author $source $cite -}}
+  <footer class="quote-attribution">
+    {{- if $author -}}
+      <cite class="quote-author">
+        {{- if $cite -}}
+          <a href="{{ $cite }}" target="_blank" rel="noopener noreferrer">{{ $author }}</a>
+        {{- else -}}
+          {{ $author }}
+        {{- end -}}
+      </cite>
+    {{- end -}}
+    
+    {{- if $source -}}
+      {{- if $author -}}, {{ end -}}
+      <span class="quote-source">
+          <a href="{{ $source }}" target="_blank" rel="noopener noreferrer">{{ $source }}</a>
+      </span>
+    {{- end -}}
+  </footer>
+  {{- end -}}
+</blockquote>
+
+<style>
+.quote {
+  margin: 1.5rem 0;
+  padding: 1.25rem 1.5rem;
+  background: var(--color-neutral-50, #f9fafb);
+  border-radius: 0.375rem;
+  position: relative;
+  font-weight: 400;
+}
+
+.dark .quote {
+  background: var(--color-neutral-800, #1f2937);
+  border-left-color: var(--color-primary-400, #60a5fa);
+}
+
+.quote .quote-content {
+  margin: 0;
+}
+
+.quote .quote-content > *:first-child {
+  margin-top: 0;
+}
+
+.quote .quote-content > *:last-child {
+  margin-bottom: 0;
+}
+
+.quote .quote-content h1,
+.quote .quote-content h2,
+.quote .quote-content h3,
+.quote .quote-content h4,
+.quote .quote-content h5,
+.quote .quote-content h6 {
+  color: var(--color-primary-600, #2563eb);
+  margin-top: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.dark .quote .quote-content h1,
+.dark .quote .quote-content h2,
+.dark .quote .quote-content h3,
+.dark .quote .quote-content h4,
+.dark .quote .quote-content h5,
+.dark .quote .quote-content h6 {
+  color: var(--color-primary-400, #60a5fa);
+}
+
+.quote .quote-content ul,
+.quote .quote-content ol {
+  padding-left: 1.5rem;
+  margin: 0.75rem 0;
+}
+
+.quote .quote-content li {
+  margin: 0.25rem 0;
+}
+
+.quote .quote-content blockquote {
+  margin: 1rem 0;
+  padding-left: 1rem;
+  border-left: 3px solid var(--color-neutral-300, #d1d5db);
+  background: transparent;
+  font-style: italic;
+}
+
+.dark .quote .quote-content blockquote {
+  border-left-color: var(--color-neutral-600, #4b5563);
+}
+
+.quote .quote-content code {
+  background: var(--color-neutral-200, #e5e7eb);
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-size: 0.9em;
+}
+
+.dark .quote .quote-content code {
+  background: var(--color-neutral-700, #374151);
+}
+
+.quote .quote-content pre {
+  background: var(--color-neutral-100, #f3f4f6);
+  padding: 1rem;
+  border-radius: 0.375rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+.dark .quote .quote-content pre {
+  background: var(--color-neutral-900, #111827);
+}
+
+.quote .quote-attribution {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-neutral-200, #e5e7eb);
+  font-size: 0.9em;
+  color: var(--color-neutral-600, #4b5563);
+  font-style: italic;
+}
+
+.dark .quote .quote-attribution {
+  border-top-color: var(--color-neutral-700, #374151);
+  color: var(--color-neutral-400, #9ca3af);
+}
+
+.quote .quote-attribution a {
+  color: var(--color-primary-600, #2563eb);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.quote .quote-attribution a:hover {
+  color: var(--color-primary-700, #1d4ed8);
+  text-decoration: underline;
+}
+
+.dark .quote .quote-attribution a {
+  color: var(--color-primary-400, #60a5fa);
+}
+
+.dark .quote .quote-attribution a:hover {
+  color: var(--color-primary-300, #93c5fd);
+}
+
+.quote .quote-author {
+  font-weight: 500;
+  font-style: normal;
+}
+
+.quote .quote-source {
+  font-style: italic;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .quote {
+    padding: 1rem;
+    margin: 1rem 0;
+  }
+  
+  .quote .quote-content ul,
+  .quote .quote-content ol {
+    padding-left: 1.25rem;
+  }
+}
+</style>

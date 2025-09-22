@@ -127,10 +127,10 @@ At this point, it would also be strategic to try and do some more probing into t
 Xilinx FPGAs 
 exposes a handful of useful system registers accessible over JTAG. The most well known of these interfaces is the 
 SYSMON, which allows us, among other things, to get real time temperature and voltage reading from inside the chip. 
-Although openOCD doesn't have SYSMON support out of the box it would be worth while to build it to : 
-1. Familise myself with openOCD scripting, this might come in handy when  building my ILA replacement down the line 
+Although openOCD doesn't have SYSMON support out of the box it would be worth while to build it, to : 
+1. Familiarise myself with openOCD scripting, this might come in handy when  building my ILA replacement down the line 
 2. Having an easy side channel to monitor FPGA operating parameters 
-3. openOCD did have support for interfacing with the SYSMON’s ancestor, the XADC on the series 7, so it would be a nice contribution to make 
+3. Make a contribution to openOCD as it have support for the interfacing with XADC but not SYSMON
 
 ### 3 - Figuring out the Pinout 
 
@@ -264,7 +264,7 @@ an FPGA, this with the class as an ethernet networking device is a strong hint t
 #### Full PCIe device status
 
 Dmesg logs have already given us a good indication that our FPGA board and its PCIe interface was working but to confirm with certainty that the device with vendor id `dabc` is our FPGA we now turn to `lspci`.
-`lscpi -vvv` is the most verbose output and gives us a full overview of the detected PCIe devices capabilities and current configurations.
+`lspci -vvv` is the most verbose output and gives us a full overview of the detected PCIe devices capabilities and current configurations.
 
 
 Broadcom bridge: 
@@ -523,8 +523,7 @@ there is no immediate need for a custom connector but we will not be able to rea
 {{< alert >}}
 If no clock speed is specified OpenOCD sets the clock speed at 100MHz. 
 This is too high in our case. 
-As such, latter in the article, I will be setting the JTAG clock down to 1MHz for probing and reset,  
-programming will be done at 10MHz.
+As such, latter in the article, I will be setting the JTAG clock down to 1MHz for probing and reset, programming will be done at 10MHz.\
 No issues were encountered at these speeds. 
 {{< /alert >}}
 
@@ -551,7 +550,7 @@ I cannot delve into a black box.
 By default the version of OpenOCD that I got on my server via the official packet manager was outdated and missing features 
 I will need. 
 
-Also, since saving the ability to modify OpenOCB's source code could come in handy, I decided to re-build it from source. 
+Also, since saving the ability to modify OpenOCD's source code could come in handy, I decided to re-build it from source. 
 
 Thus, in the following logs, I will be running OpenOCD version `0.12.0+dev-02170-gfcff4b712`.
 
@@ -565,12 +564,12 @@ In JTAG, each chained device exposes an accessible `IDCODE` register used to ide
 
 When setting up the JTAG server, we typically define the scan chain by specifying the expected `IDCODE` for each TAP and the corresponding instruction register length, so that instructions can be correctly aligned and routed to the intended device.
 Given this is an undocumented board off Ebay, I do not know what the chain looks like. 
-Fortunately, OpenOCB has an autoprobing functionality, to do a bling interrogation in an **attempt** to discover 
+Fortunately, OpenOCD has an autoprobing functionality, to do a blind interrogation in an **attempt** to discover 
 the available devices. 
 
 Thus, my first order of business was doing this autoprobing. 
 
-In OpenOCB the autoprobing is done when the configuration does not specify any taps. 
+In OpenOCD the autoprobing is done when the configuration does not specify any taps. 
 
 ```tcl
 source [find interface/jlink.cfg]
@@ -615,7 +614,7 @@ precisely with the expected value for the `KU3P`.
     caption="JTAG and IDCODE for UltraScale Architecture-based FPGAs"
 >}}
 
-By default OpenOCB assumes a JTAG IR length of 2 bits, while our FPGA has an IR length of 6 bits. 
+By default OpenOCD assumes a JTAG IR length of 2 bits, while our FPGA has an IR length of 6 bits. 
 This is the cause behind the IR capture error encountered during autoprobing. By updating the script with an IR length of 6 bits we can re-detect the FPGA with no errors. 
 
 ```tcl
@@ -1071,7 +1070,7 @@ drawback of restarting Vivado and needing to re-load the project or the project 
 As the project size grows so will the project load time, so segmenting the
 flow into a large number of independent scripts comes at an increasing cost. 
 
-Makefile : 
+`Makefile` : 
 ```makefile
 SHELL := /bin/bash
 
@@ -1116,7 +1115,7 @@ clean:
     rm -f usage_statistics_webtalk*{html,xml}
 ```
 
-setup.tcl :
+`setup.tcl` :
 ```tcl
 set project_dir [lindex $argv 0]
 set project_name [lindex $argv 1]
@@ -1128,7 +1127,7 @@ close_project
 exit 0
 ```
 
-build.tcl : 
+`build.tcl` : 
 ```tcl
 set project_path [lindex $argv 0]
 set src_path [lindex $argv 1]
@@ -1209,7 +1208,7 @@ devices we should register them following the order in which they appear on the 
 
 Finally to generate the svf file, we must select the device we wish to program `program_hw_device <hw_device>`, then write out the svf to the file using `write_hw_svf <path to svf file>`.
 
-gen.tcl:
+`gen.tcl`:
 ```tcl
 set checkpoint_path [lindex $argv 0]
 set out_dir [lindex $argv 1]
@@ -1255,33 +1254,37 @@ exit 0
 
 Although not widespread openOCD has a very nice `svf` replay command :
 
-```
-18.1 SVF: Serial Vector Format
+{{< quote author="~ OpenOCD documentation" source="https://openocd.org/doc-release/html/Boundary-Scan-Commands.html#SVF_003a-Serial-Vector-Format" >}}
+#### 18.1 SVF: Serial Vector Format
 
 The Serial Vector Format, better known as SVF, is a way to represent JTAG test patterns
 in text files. In a debug session using JTAG for its transport protocol, OpenOCD supports
 running such test files.
 
+```
 [Command]svf filename [-tap tapname] [[-]quiet] [[-]nil] [[-]progress]
 [[-]ignore_error]
+```
 
 This issues a JTAG reset (Test-Logic-Reset) and then runs the SVF script from
 filename.
 Arguments can be specified in any order; the optional dash doesn’t affect their se-
 mantics.
 
-Command options:
-− -tap tapname ignore IR and DR headers and footers specified by the SVF file
+**Command options**:
+- `-tap` tapname ignore IR and DR headers and footers specified by the SVF file
 with HIR, TIR, HDR and TDR commands; instead, calculate them automatically
 according to the current JTAG chain configuration, targeting tapname;
-− [-]quiet do not log every command before execution;
-− [-]nil “dry run”, i.e., do not perform any operations on the real interface;
-− [-]progress enable progress indication;
-− [-]ignore_error continue execution despite TDO check errors.
-``` 
+- `[-]quiet` do not log every command before execution;
+- `[-]nil` “dry run”, i.e., do not perform any operations on the real interface;
+- `[-]progress` enable progress indication;
+- `[-]ignore`_error continue execution despite TDO check errors.
+{{< /quote >}}
 
-We invoke it in our openOCD script using the `-progress` option for additional logging : 
-```
+We invoke it in our openOCD script using the `-progress` option for additional logging.
+
+`openocd` : 
+```tcl
 set svf_path "out/project_prj_checkpoint.svf"
 
 source [find interface/jlink.cfg]
@@ -1408,6 +1411,10 @@ Alinx Kintex UltraScale+ dev boards : https://www.en.alinx.com/Product/FPGA-Deve
 
 UltraScale Architecture Configuration User Guide (UG570) : https://docs.amd.com/r/en-US/ug570-ultrascale-configuration/Device-Resources-and-Configuration-Bitstream-Lengths?section=gyn1703168518425__table_vyh_4hs_szb
 
+UltraScale Architecture System Monitor User Guide (UG580): https://docs.amd.com/v/u/en-US/ug580-ultrascale-sysmon
+
+Vivado Design Suite Tcl Command Reference Guide (UG835): https://docs.amd.com/r/en-US/ug835-vivado-tcl-commands/Tcl-Initialization-Scripts
+
 PCI vendor/device ID database: https://admin.pci-ids.ucw.cz/read/PC/14e4
 
 PCI device classes: https://admin.pci-ids.ucw.cz/read/PD
@@ -1418,4 +1425,4 @@ Linux kernel PCI classes: https://github.com/torvalds/linux/blob/7aac71907bdea16
 
 Truck-kun pinout: https://blog.csdn.net/qq_37650251/article/details/145716953
 
-
+OpenOCD documentation: https://openocd.org/doc-release/pdf/openocd.pdf
