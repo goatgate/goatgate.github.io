@@ -4,7 +4,6 @@ description: "Using a decommissioned Alibaba cloud accelerator card as an FPGA d
 summary: "No documentation, no problem!"
 tags: ["fpga", "ebay", "debugging", "linux", "hacking"]
 date: 2025-09-02
-draft: true
 showTableOfContentse: true
 ---
 
@@ -13,8 +12,8 @@ showTableOfContentse: true
 I was recently in the market for a new FPGA to start building my upcoming projects on. 
  
 
-Due to the scale of my upcomming projects a Xilinx series 7 UltraScale+ FPGA of the Virtex family would be perfect,
- but a Kintex series FPGA will be a sufficent for early prototyping.
+Due to the scale of my upcoming projects a Xilinx series 7 UltraScale+ FPGA of the Virtex family would be perfect,
+ but a Kintex series FPGA will be sufficient for early prototyping.
 Due to not wanting to part ways with the eye watering amounts of money that is
 required for an Vivado enterprise edition license
 my choice was effectively narrowed to the FPGA chips available under the WebPack version of Vivado. 
@@ -22,7 +21,7 @@ my choice was effectively narrowed to the FPGA chips available under the WebPack
 {{< figure
     src="xilinx_doc.png"
     alt="Xilinx supported boards per vivado edition" 
-    caption="Xilinx supported boards per vivado edition" 
+    caption="Xilinx supported boards per Vivado edition" 
 >}} 
 
 
@@ -36,7 +35,7 @@ That said, they do offer support for two very respectable Kintex UltraScale+ FPG
     caption="Xiling product guide, overview for the Kintex UltraScale+ series"
 >}}
 
-These two chips are far from being small hobiest toys, with the smaller `XCUK3P` already boasting +162K LUTs and 
+These two chips are far from being small hobbyist toys, with the smaller `XCUK3P` already boasting +162K LUTs and 
 16 GTY transceivers, capable, depending on the physical constraints imposed by the chip packaging of 
 operating at up to 32.75Gb/s.
   
@@ -52,21 +51,20 @@ As to where to get the board from, my options where :
 2. Get the AXKU5 or AXKU3 from Alinx
 3. See what I could unearth on the second hand market
 
-Although option `1` could have likely been the most interesting, designing a 
+Although option `1` could have been very interesting, designing a 
 dev board with both a high speed PCIe and ethernet interface was not the goal of 
 today's project. 
 
 As for option `2`,
-Alinx is  newer vendor that is still building up it's credibility in the west, 
-there technical documentation is a bit sparse, but people that have 
-experimented with them seem to have experienced any issues.
-Most importantly, Alinx provided very fairly priced development boards ranging
-in the 900 to 1050 dollar ranges ( +150$ for the HPC FMC SFP+ extension board ).
-Although these are not cheap by any metric, compared to the competition 
-price point they are good value.
+Alinx is  newer vendor that is still building up its credibility in the west, 
+their technical documentation is a bit sparse, but the feedback seems to be positive with no major issues being reported.
+Most importantly, Alinx provided very fairly priced development boards 
+in the 900 to 1050 dollar range ( +150$ for the HPC FMC SFP+ extension board ).
+Although these are not cheap by any metric, compared to the competitions
+price point, they are the best value.
 
 
-Option `2` was comming up ahead until I stumbled upon this ebay listing : 
+Option `2` was coming up ahead until I stumbled upon this ebay listing : 
  
 {{< figure 
     src="ebay.png"
@@ -81,110 +79,94 @@ of what happens when a generation of accelerator cards gets phased out in favor 
 or maybe just an expensive paperweight. 
 
 But I like a challenge, and the appeal of unlocking the 200$ Kintex UltraScale+ development board 
-was to great to ignore. 
+was too great to ignore. 
 
 As such, I aim for this article to become the documentation paving the way to though this mirage. 
 
 # The debugger challenge 
 
-Xilinx outlines a list JTAG probes it supports for debugging and configuring there FPGA's. 
-I do not personnally own any of these probes and am not looking to buy yet another vendor specific probe unless necessary. 
-This does mean I will be scarificing the ability to interface with the very handy ILA (Integrated Logic
-Analyzer). That being said nothing is stopping us from building our own ILA equivalent logic, and like the 
-ILA reporting the captured information though JTAG via the available the JTAG user registers  
-
-There is open source project called OpenOCD (Open On-Chip Debugger), it's aim is to provide debugging, in-system programming, 
-and boundary-scan testing for a wide range of embedded targets through various JTAG/SWD adapters.
-It is typically used for programming and debugging embedded SOCs.  
-
-Given it's large library of already supported debug probes and boards, OpenOCB is common run by invoking pre-build configurations. 
-
-That said, openOCD is acctually a very capable and configurable tool which allows us a great 
-degree of control over what the JTAG adapter is going. Additionally, it has support out of the box for 
-standard SVF(Serial Vector Format) format used to describe a sequence of JTAG operations and I know that 
-Vivado can generate a SVF file.
-As such, although there isn't really and documentation of configuring an xilinx FPGA past the 7 series, 
-and most of the most recent developpement are focused more on it's ability to debug embeeded Zync arm cores, 
-I figured it should be doable.
-
-Wish me luck.   
+Xilinx's UG908 Programming and Debugging User Guide (Appendix D) specifies their blessed JTAG probe ecosystem for FPGA configuration and debug. Rather than dropping $100+ on yet another proprietary dongle that'll collect dust after the project ends, I'm exploring alternatives.
+The obvious tradeoff: abandoning Xilinx's toolchain means losing ILA integration. However, the ILA fundamentally just captures samples and streams them via JTAG USER registers, there's nothing preventing us from building our own logic analyzer with equivalent functionality and a custom host interface.
+Enter OpenOCD. While primarily targeting ARM/RISC-V SoCs, it maintains an impressive database of supported probe hardware and provides granular control over JTAG operations. More importantly, it natively supports SVF (Serial Vector Format), a vendor-neutral bitstream format that Vivado can export.
+The documentation landscape is admittedly sparse for anything beyond 7-series FPGAs, and the most recent OpenOCD documentation I could unearth was focused on Zynq ARM core debugging rather than fabric configuration. But the fundamentals remain sound: JTAG is JTAG, SVF is standardized, and the boundary scan architecture hasn't fundamentally changed.
+The approach should be straightforward: generate SVF from Vivado, feed it through OpenOCD with a commodity JTAG adapter, and validate the configuration. Worst case, we'll need to patch some adapter-specific quirks or boundary scan chain register addresses.
+Time to find out if this theory holds up in practice.
+ 
  
 # The plan 
 
-So, to resume the current plan is to buy a second hand hardware accelerator of ebay at a too good to be true price, and try to configure it
+So, to resume, the current plan is to buy a second hand hardware accelerator of eBay at a too good to be true price, and try to configure it
 with an unofficial probe using open source software without any clear official support.  
-The awnser to the obvious question you are thinking if you, like me have been around the block a few times is: so many things can go wrong. 
+The answer to the obvious question you are thinking if you, like me, have been around the block a few times is: many things. 
 
-As such, we need as to how to approach this. 
-The goal of this plan is to outline incremental steps I can follow to build upon themselves with the end goal of being able to use this as a dev board. 
+As such, we need a plan for approaching this. 
+The goal of this plan is to outline incremental steps that will build upon themselves with the end goal of being able to use this as a dev board. 
 
 ## 1 - Confirming the board works 
  
-First order of buisness will be to confirm the board is showing signs of working as intended. 
+First order of business will be to confirm the board is showing signs of working as intended. 
 
-There is a high probabiliy that the flash wasn't wipped before this board was sold off, as such the pervious bitstream should
+There is a high probability that the flash wasn't wiped before this board was sold off, as such the previous bitstream should
 still be in the flash. 
 Given this board was used as an accelerator, we should be able to use that to confirm the board is working by either checking if 
-the board is presenting itself as a PCIe endpoint or if the sfp's are sending the ethernet PHY idle sequence. 
+the board is presenting itself as a PCIe endpoint or if the SFP's are sending the ethernet PHY idle sequence. 
 
 ## 2 - Connecting a debugger to it
 
-Next step is to try and get the debugger connected.
-The ebay listing advertized there is a JTAG interface, but the picture is grainy enoght that where that JTAG is and what pins are 
+The next step is going to be to try and connect the debugger.
+The eBay listing advertised there is a JTAG interface, but the picture is grainy enough that where that JTAG is and what pins are 
 available is unclear. 
 
-Additionally, we have no indication of what devices are daisy chainned together onto the JTAG scan chain. 
-This is an essential question if we want to use JTAG for flashing, so we will need to figure that out. 
+Additionally, we have no indication of what devices are daisy chained together onto the JTAG scan chain. 
+This is an essential question for flashing over JTAG, so it will need to be figured out. 
 
-At this point, it would be strategic to use try and do some more probing into the FPGA via JTAG. 
-Xilinx FPGA's 
-exposes a hand full of usefull functionalities accessible over JTAG. The most well known of these is likely the 
-SYSMON, which for example allows us to get real time temperature and voltage reading from inside the chip. 
-Although openOCD doesn't have sysmon support out of the box it would be worth while to build it to : 
-1. Familize myself with openOCD scripting, usefull for building my ILA replacement down the line and when debugging
+At this point, it would also be strategic to try and do some more probing into the FPGA via JTAG. 
+Xilinx FPGAs 
+exposes a handful of useful system registers accessible over JTAG. The most well known of these interfaces is the 
+SYSMON, which allows us, among other things, to get real time temperature and voltage reading from inside the chip. 
+Although openOCD doesn't have SYSMON support out of the box it would be worth while to build it to : 
+1. Familise myself with openOCD scripting, this might come in handy when  building my ILA replacement down the line 
 2. Having an easy side channel to monitor FPGA operating parameters 
-3. openOCD did have support for interfacing with the sysmon's ancestor, the XADC on the series 7, so it would be a nice contribution to add 
+3. openOCD did have support for interfacing with the SYSMON’s ancestor, the XADC on the series 7, so it would be a nice contribution to make 
 
-## 3 - Figuring out the pinnout 
+## 3 - Figuring out the Pinout 
 
-The next hardest part will be figuring out the FPGA's pinnout and my clock sources. 
-The biggest questions that need awnsering will be : 
+The hardest part will be figuring out the FPGA's pinout and my clock sources. 
+The questions that need answering are : 
 - what external clocks sources do I have, what are there frequencies and which pins are they connected to 
-- which transivers are the SFPs connected to 
-- which transivers is the PCIe connected to
+- which transceivers are the SFPs connected to 
+- which transceivers is the PCIe connected to
 
 ## 4 - Writing a bitstream 
 
-For the time being I will be focusing on writing just temporary configurations over JTAG and not re-writing the flash. 
+For now I will be focusing on writing a temporary configurations over JTAG to the CCLs and not re-writing the flash. 
 
-I plan on trying to write either the bitstream directly though openOCD's `virtex2` + `pld` drivers, or by following the 
+That plan is to trying writing either the bitstream directly though openOCD's `virtex2` + `pld` drivers, or by replaying the 
 SVF generated by Vivado. 
-My hopes are higher for the SVF path, but since I will be generating a bitstream anyways in order to build my SVF file 
-I will be trying both. 
-Additionally, since I believe a low itteration time is paramount to project velocity and getting big things done, I also want automatize
-all of the vivado flow from taking the rtl to the svf generation. 
 
-Simple enogth, right ?
+Since I believe a low iteration time is paramount to project velocity and getting big things done, I also want automatize
+all of the Vivado flow from taking the rtl to the SVF generation. 
+
+Simple enough ?
 
 
-# Livness test
+# Liveness test
 
-A few days latter my prize arrived via extress mail. 
+A few days later my prize arrived via express mail. 
 
 {{< figure
     src="fpga.jpg"
     alt="fpga"
-    caption="My prized Kintex UltraScale\+ FPGA board also know as the decomissioned alibaba cloud accelerator. Jammed transiver now safely removed."
+    caption="My prized Kintex UltraScale\+ FPGA board also known as the decommissioned Alibaba cloud accelerator. Jammed transceiver now safely removed."
 >}}
 
 Unexpectedly it even came with a free 25G SFP28 Huawei transceiver rated for a 300m distance and a single 1m long OS2 fiber patch cable. 
 This might not have been intentional as the transceiver was jammed in the SFP cage, but it was still very generous of them to include the fiber patch cable.
-After all who doesn't like free stuff?
 
 {{< figure
     src="free_stuff.jpg"
-    alt="Additional SFP28-25G-1310nm-300m-SM Huawei transiver, and 1m long OS2 patch cable" 
-    caption="Free additional SFP28-25G-1310nm-300m-SM Huawei transiver, and 1m long OS2 patch cable" 
+    alt="Additional SFP28-25G-1310nm-300m-SM Huawei transceiver, and 1m long OS2 patch cable" 
+    caption="Free additional SFP28-25G-1310nm-300m-SM Huawei transceiver, and 1m long OS2 patch cable" 
 >}}
 
 The board also came with a travel case and half of a PCIe to USB adapter and a 12V power supply that one could use to power the board as a standalone device. Although this standalone configuration will not be of any use to me, for those looking to develop just networking interfaces without any PCIe interface, this could come in handy.
@@ -194,24 +176,21 @@ Overall the board looked a little worn, but both the transceiver cages and PCIe 
 ## Standalone configuration 
 
 Before real testing could start I first did a small power-up test using the PCIe to USB adapter that the seller provided. 
-
-This allowed me to power up the board and using the LEDs on the board and the heat produced by the FPGA 
-I was able to do a quick check that the board seemed to be powering up at a surface level (pun intended).
+I was able to do a quick check using the LEDs and the FPGAs dissipated heat that the board seemed to be powering up at a surface level (pun intended).
 
 ## PCIe interface
 
 {{< alert >}}
-As a reminder, this next test relied on the flash not having been wiped and someone else's design still
-being loaded.
+As a reminder, this next section relies on the flash not having been wiped and still containing the previous user's design.
 {{< /alert >}}
 
-Since I didn't want to directly plug this into my prized build server, I decided to use a Raspberry Pi 5 as
-my test device and got myself an external PCIe adapter.
+Since I didn't want to directly plug mystery hardware into my prized build server, I decided to use a Raspberry Pi 5 as
+my sacrificial test device and got myself an external PCIe adapter. 
 
-It just so happened that the latest Raspberry Pi 5 now features an external PCIe Gen 2.0 x1 interface.
+It just so happened that the latest Raspberry Pi version, the Pi 5, now features an external PCIe Gen 2.0 x1 interface.
 Though our FPGA can handle up to a PCIe Gen 3.0 and the board had a x8 wide interface,
 since PCIe standard is backwards compatible and the number of lanes on the interface can be downgraded,
-plugging our FPGA with this Raspberry Pi should work.
+plugging our FPGA with this Raspberry Pi will work.
 
 {{< figure 
     src="pi.jpg"
@@ -233,10 +212,10 @@ PCIe core subsystem.
 [    0.495759] pci 0000:01:00.0: [dabc:1017] type 00 class 0x020000
 ```
 
-### Background infomration 
+### Background information 
 
-Since most people might not be intimatly as familiar with PCIe terminology, allow me to 
-take a step back and give more details as to what is going on here. 
+Since most people might not be intimately as familiar with PCIe terminology, allow me to 
+quickly document what is going on here. 
 
 `0000:00:00.0`: is the identifier of a specific PCIe device connected through the PCIe network 
 to the kernel, it read as `domain`:`bus`:`device`.`function`.
@@ -244,44 +223,41 @@ to the kernel, it read as `domain`:`bus`:`device`.`function`.
 `[14e4:2712]`: is the device's `[vendor id:device id]`, these vendor id identifiers are 
 assigned by the PCI standard body to hardware vendors. Vendors are then free to define there 
 own vendor id's. The full list of official vendor id's and released device id can be found : https://admin.pci-ids.ucw.cz/read/PC/14e4 or in
-a less user friendly format in the linux kernel code : https://github.com/torvalds/linux/blob/7aac71907bdea16e2754a782b9d9155449a9d49d/include/linux/pci_ids.h#L160-L3256
+the linux kernel code : https://github.com/torvalds/linux/blob/7aac71907bdea16e2754a782b9d9155449a9d49d/include/linux/pci_ids.h#L160-L3256
 
-`type 01`: PCIe has two trypes of devices, bridges allowing the connection of multiple downstream devices to an 
-upstream device, and endpoints.
+`type 01`: PCIe has two types of devices, bridges allowing the connection of multiple downstream devices to an 
+upstream device, and endpoints are the leafs.
 Bridges are of type `01` and endpoints of type `00`.
 
-`class 0x60400`: is the PCIe device class and catheogrises what kind of function this device performs. It 
-has the following format `0x[Base Class (8 bits)][Sub Class (8 bits)][Programming Interface (8 bits)]`, 
-though the nasty little secret is that the sub class field is often ignored. 
-A list of class and sub class idenfiers can be found: https://admin.pci-ids.ucw.cz/read/PD or in the linux codebase : https://github.com/torvalds/linux/blob/7aac71907bdea16e2754a782b9d9155449a9d49d/include/linux/pci_ids.h#L15-L158
+`class 0x60400`: is the PCIe device class, it categorizes the kind of function the device performs. It 
+uses the following format `0x[Base Class (8 bits)][Sub Class (8 bits)][Programming Interface (8 bits)]`, 
+( note : the sub class field might be unused ). 
+A list of class and sub class identifiers can be found: https://admin.pci-ids.ucw.cz/read/PD or in the linux codebase : https://github.com/torvalds/linux/blob/7aac71907bdea16e2754a782b9d9155449a9d49d/include/linux/pci_ids.h#L15-L158
 
 ### Dmesg log 
 
-Of our dmesg content the follow two lines are the most relevant : 
+The two most interesting lines of the `dmesg` log are : 
 ```
 [    0.388790] pci 0000:00:00.0: [14e4:2712] type 01 class 0x060400
 [    0.495759] pci 0000:01:00.0: [dabc:1017] type 00 class 0x020000
 ```
 
-Firstly the PCIe subsystem is logging at `0000:00:00.0` it has discovered a Broadcom ( vendor id `14e4` ) BCM2712 PCIe Bridge ( device id `0x2712` ). 
-As the name suggests and the type of `01` confirms this is a bridge, the class of `0x0604xx` tells us exactly what it bridges to. 
-Here it is a PCI-to-PCI bridge, meaning that more devices can be connected downstream of it, as such, the search continues. 
-
-The subsystem then discovers a second device at `0000:01:00.0`, this is an endpoint device as indicated by its type of `00`
-and its class of `0x02000` tells us this is ethernet networking equipment. 
-Our next hint is the `dabc` doesn't correspond to a known vendor id. When designing a PCIe interface in hardware these 
-are parameters we can set. Additionally, among the different ways Linux uses to identify which driver to load for a PCIe device 
-the vendor id and device id can be used. Supposing we are implementing custom logic, in order to prevent any bug where the wrong driver 
-could be loaded, it is best to use a separate vendor id. 
-This also helps identify your custom accelerator at a glance. 
+Firstly the PCIe subsystem logs that at `0000:00:00.0` it has discovered a Broadcom BCM2712 PCIe Bridge ( vendor id `14e4`, device id `0x2712` ).This bridge (type `01`) class `0x0604xx` tells us it is a PCI-to-PCI bridge, meaning it is essentially creating additional PCIe lanes downstream for endpoint devices or additional bridges.
+The subsystem then discovers a second device at `0000:01:00.0`, this is an endpoint (type `00`), and class `0x02000` tells us it is an ethernet networking equipment. 
+Of note `dabc` doesn't correspond to a known vendor id. 
+When designing a PCIe interface in hardware these 
+are parameters we can configured. Additionally, among the different ways Linux uses to identify which driver to load for a PCIe device 
+the vendor id and device id can be used for matching. Supposing we are implementing custom logic, in order to prevent any bug where the wrong driver 
+might be loaded, it is best to use a separate vendor id. 
+This also helps identify your custom accelerator at a glance and use it to load your custom driver. 
 
 As such, it is not surprising to see an unknown vendor id appear for 
-an FPGA, this with the class as an ethernet networking device give us strong indication this is our board.
+an FPGA, this with the class as an ethernet networking device is a strong hint this is our board.
 
 ### Full PCIe device status
 
-The dmesg logs gave us a good overview of the situation but for additional details we can turn to `lspci`.
-The most verbose output gives us a full overview of the devices capabilities and current configuration.
+Dmesg logs have already given us a good indication that our FPGA board and its PCIe interface was working but to confirm with certainty that the device with vendor id `dabc` is our FPGA we now turn to `lspci`.
+`lscpi -vvv` is the most verbose output and gives us a full overview of the detected PCIe devices capabilities and current configurations.
 
 
 Broadcom bridge: 
@@ -417,9 +393,7 @@ FPGA board:
                 LaneErrStat: 0
 ```
 
-The `lspci` logs give us a lot of useful information on the current status of PCIe devices, 
-but I would like to call your focus on the following particularly interesting lines reported 
-for our FPGA : 
+For our board, the following lines are particularly interesting:
 ```
                 LnkCap: Port #0, Speed 8GT/s, Width x8, ASPM not supported
                         ClockPM- Surprise- LLActRep- BwNot- ASPMOptComp+
@@ -428,39 +402,38 @@ for our FPGA :
                 LnkSta: Speed 5GT/s (downgraded), Width x1 (downgraded)0x060400
 ```
 The `LnkCap` tells us about the full capabilities of this PCIe device, here we can see that 
-the current design is a PCIe Gen 3.0 x8. 
-That said the `LnkSta` tells us our speed has been downgraded to that of PCIe Gen 2.0 at 5GT/s and 
-that our width is only x1. 
+the current design supports PCIe Gen 3.0 x8. 
+The `LnkSta` tells us the current configuration, here we have been downgraded to PCIe Gen 2.0 at 5GT/s with a width of only x1. 
 
-When a new PCIe device is plugged in or during startup, PCIe performs a link speed and width negotiation 
+During startup of when a new PCIe device is plugged, PCIe performs a link speed and width negotiation 
 where it tries to reach the highest supported stable configuration for the current system. 
-In our current system, although our FPGA is capable of 8GT/s, since it is located downstream of the 
-Broadcom bridge with a maximum link capacity of Gen 2.0, the FPGA has been downgraded to 5GT/s.
+In our current system, though our FPGA is capable of 8GT/s, as it is located downstream of the 
+Broadcom bridge with a maximum link capacity of Gen 2.0 ( 5GT/s ), the FPGA has been downgraded to 5GT/s.
 
-As for the width of x1, that is expected since the Broadcom bridge is also only x1 wide, and the other 
+As for the width of x1, that is expected since the Broadcom bridge is also only x1 wide, and our board’s other 
 7 PCIe lanes are literally hanging over the side. 
 
 {{< figure
     src="pcie_air.jpg"
-    alt="7 PCIe lanes left unconnected and hangging over the air"
-    caption="7 PCIe lanes left unconnected and hangging over the air"
+    alt="7 PCIe lanes left unconnected and hanging over the air"
+    caption="7 PCIe lanes left unconnected and hanging over the air"
 >}}
 
-Thanks to this we can confirm that our board seems to be working, and we can now move to figuring 
-out how to get the JTAG connection. 
+Thus, we can finally confirm that this is our board and that the PCIe interface is working.
+We can now proceed to establishing the JTAG connection. 
 
 # JTAG interface 
 
 Xilinx FPGAs can be configured by writing a bitstream to their internal CMOS Configuration Latches (CCL).
-This memory is volatile, so this configuration must be re-done on every power cycle.
-For in the field devices this bitstream would typically be read from an external SPI memory during initialization,
-or written from an external device, like an embedded controller, but for development purposes overwriting the contents of the CCLs over JTAG is acceptable.
+CCL is SRAM memory and volatile, thus the configuration is re-done on every power cycle.
+For devices in the field this bitstream would be read from an external SPI memory during initialization,
+or written from an external device, such as an embedded controller. But for development purposes overwriting the contents of the CCLs over JTAG is acceptable.
 
-This configuration is done by shifting in the entire FPGA configuration bitstream into the JTAG bus.
+This configuration is done by shifting in the entire FPGA bitstream into the device’s configuration logic over the JTAG bus.
 
 ## FPGA board JTAG interface 
 
-As promised by the original eBay listing the board did come with an accessible JTAG interface, and there
+As promised by the original eBay listing the board did come with an accessible JTAG interface, and gloriously enough, this time there
 wasn't even the need for any additional soldering.
 
 {{< figure
@@ -470,36 +443,32 @@ wasn't even the need for any additional soldering.
 >}} 
 
 
-In addition to a power reference, and ground, it featured the four mandatory signals comprising the JTAG TAP, 
-which are : 
+In addition to a power reference, and ground, conformely to the Xilinx JTAG interface it featured the four mandatory signals comprising the JTAG TAP : 
 - **TCK** Test Clock 
 - **TMS** Test Mode Select
 - **TDI** Test Data Input 
 - **TDO** Test Data Output 
 
-The JTAG interface can also come with an independent reset signal. 
-That said, since Xilinx JTAG interfaces do not have this independent reset signal, we will need to use the JTAG FSM reset state
-as our reset signal.
+Of note, the JTAG interface can also come with an independent reset signal. 
+But since Xilinx JTAG interfaces do not have this independent reset signal, we be using the JTAG FSM reset state
+for our reset signal.
 
 {{< figure 
     src="board_jtag_intf.svg"
-    alt="very nice documentation of the board jtag pinout"
-    caption="6 pin board jtag interface"
+    alt="very nice documentation of the board JTAG pinout"
+    caption="6 pin board JTAG interface"
 >}}
 
-Another issue with this layout is that, likely in the interest of saving on space and
-manufacturing cost given this accelerator was not designed as a dev board, this JTAG interface
-doesn't follow an easily compatible layout on which I can just plug in one of my debug probes.
-As such, it will require some re-wiring.
+This interface layout doesn't follow a standard layout so I cannot just plug in one of my debug probes, it requires some re-wiring.
 
 ## Segger JLINK :heart: 
 
 I do not own an AMD approved JTAG programmer. 
 
 Traditionally speaking, the Segger JLink is used for debugging embedded CPUs let them be standalone or in a
-Zynq, rather than for configuring FPGAs.
+Zynq, and not for configuring FPGAs.
 
-That being said, all we need to do is use JTAG to shift in a bitstream to the CCLs and
+That said, all we need to do is use JTAG to shift in a bitstream to the CCLs, so
 technically speaking any programmable device with 4 sufficiently fast GPIOs can be used as a JTAG programmer.
 Additionally, the JLink is well supported by OpenOCD, the JLink's libraries are open source, and I happened to own one.
 
@@ -508,22 +477,21 @@ Note : I could also have used a USB Blaster, which considering it is literally a
 {{< /alert >}}
 {{< figure 
     src="segger_jlink_conn.svg"
-    alt="very nice 20 pin segger jlink pinnout interface documentation"
-    caption="20 pin segger jlink pinnout"
+    alt="very nice 20 pin segger JLink pinout interface documentation"
+    caption="20 pin segger JLink pinout"
     >}}
 
 ### Wiring
 
-Given my PCB's JTAG interface wasn't out of the box compatible with my JLink's probe
-it required some small rewiring.
+Rewiring : 
 
 {{< figure
     src="jtag_wiring.svg"
-    alt="very nice jtag wiring driagram to connect jlink jtag probe to fpga board"
-    caption="wiring driagram to connect jlink jtag probe to fpga board"
+    alt="very nice JTAG wiring diagram to connect JLink jtag probe to fpga board"
+    caption="Wiring diagram to connect JLink JTAG probe to the board."
 >}}
 
-JTAG is a parallel protocol where `TDI` and `TMS` will be captured on the `TCK` rising edge. 
+JTAG is a parallel protocol where `TDI` and `TMS` will be captured according to `TCK`. 
 Because of this, good JTAG PCB trace length matching is advised in order to minimize skew. 
 
 {{< figure
@@ -533,8 +501,7 @@ Because of this, good JTAG PCB trace length matching is advised in order to mini
 >}} 
 
 Ideally a custom connector with length matched traces to work as an interface between the JLink's
-probe and a board specific connector would be used. This could be a 20 minute KiCad project
-and be back in under a week using OSH Park or JLCPCB.
+probe and a board specific connector would be used. 
 
 {{< figure
     src="con.jpg"
@@ -542,17 +509,16 @@ and be back in under a week using OSH Park or JLCPCB.
     caption="Far from length matched JTAG connections" 
 >}}
 
-And yet, here we are shoving breadboard wires between our debugger and the board.
-On the flip side, we can increase the skew tolerance by slowing down the TCK clock signal and
-it just so happens that OpenOCD allows us to easily control the debugger clock speed. As such
-there is no need for a custom connector and we can work around this.
+Yet, here we are shoving breadboard wires between our debugger and the board.
+Since OpenOCD allows us to easily control the debugger clock speed, we can increase the skew tolerance by slowing down the TCK clock signal. As such
+there is no immediate need for a custom connector but we will not be able to reach the maximum JTAG speeds.
 
 {{< alert >}}
 If no clock speed is specified OpenOCD sets the clock speed at 100MHz. 
-This is to high for our case. 
-As such, latter in the article, I will be setting the JTAG clock down to 1MHz for probing and 
+This is too high in our case. 
+As such, latter in the article, I will be setting the JTAG clock down to 1MHz for probing and reset,  
 programming will be done at 10MHz.
-Both speeds show no issues. 
+No issues were encountered at these speeds. 
 {{< /alert >}}
 
 ## OpenOCD
@@ -566,44 +532,38 @@ Now, some of you might be starting to notice that I am diverging quite far from 
 supported tools. Not only am I using a not officially supported debug probe, but I am also using some
 obscure open source software with questionable support for interfacing with Xilinx UltraScale+ FPGAs.
 You might be wondering, given that the officially supported tools can already prove themselves to be a headache to get working properly,
-why I am seemingly making my life even harder?
+why am I seemingly making my life even harder?
 
-The reason is quite simple: when things inevitably start going wrong, as they will given the nature of the project,
-having an entirely open toolchain where all the code is accessible and modifiable, allows me to have more visibility
-as to what is going on.
-I cannot delve into a black box in the same fashion.
+The reason is quite simple: when things inevitably start going wrong, as they will,
+having an entirely open toolchain, allows me to have more visibility
+as to what is going on and the ability to fix it.
+I cannot delve into a black box.
 
 ### Building OpenOCD
 
-By default the version of OpenOCD that I got on my test server via the packet manager was quite outdated and missing features 
-I will need down the line. 
+By default the version of OpenOCD that I got on my server via the official packet manager was outdated and missing features 
+I will need. 
 
-Additionally, given it was unclear if configuring an Xilinx UltraScale+ FPGA's
-had every been attemplted, due to the absence of posts on the matter, I figured I might run into a few issues
-and having the ability to modify OpenOCB's source code could come in handy. 
- 
-As such, I decided to re-build it from source. 
+Also, since saving the ability to modify OpenOCB's source code could come in handy, I decided to re-build it from source. 
 
-This explains why, in following logs, I will be running OpenOCD version `0.12.0+dev-02170-gfcff4b712`.
+Thus, in the following logs, I will be running OpenOCD version `0.12.0+dev-02170-gfcff4b712`.
 
-Note : I have additionally re-build the jlink libs from source. 
+Note : I have also re-build the JLink libs from source. 
 
 ## Determining the scan chain 
 
-Since I do not have the shematics for the board I do not know how many devices are daisy-chainned on the board JTAG BUS. 
-Additionally, I would like to confirm if the FPGA on the ebay listing is actually the one on the board. 
-In the JTAG standard, each chainned device shall expose an accessible `IDCODE` register. 
-This register is used to identify the manifacturer, device type, and revision number. 
+Since I do not have the schematics for the board I do not know how many devices are daisy-chainned on the board JTAG bus. 
+Also, I want to confirm if the FPGA on the ebay listing is actually the one on the board. 
+In JTAG, each chained device exposes an accessible `IDCODE` register used to identify the manufacturer, device type, and revision number. 
 
-By default, when setting up the JTAG server, one is expected to configure the TAPs on the scan chain with the expected `IDCODE` values
-and the length of the instruction register for each device. 
-Given this is an undocumented board off eaby, I am not sure what the chain looks like. 
-Fortunatly, OpenOCB has an autoprobing functionallity, where it will do a bling interrogation in an **attempt** to discover 
-the available TAPs and report them out. 
+When setting up the JTAG server, we typically define the scan chain by specifying the expected `IDCODE` for each TAP and the corresponding instruction register length, so that instructions can be correctly aligned and routed to the intended device.
+Given this is an undocumented board off Ebay, I do not know what the chain looks like. 
+Fortunately, OpenOCB has an autoprobing functionality, to do a bling interrogation in an **attempt** to discover 
+the available devices. 
 
-As such, my first order of buisness was doing this autoprobing. 
+Thus, my first order of business was doing this autoprobing. 
 
-I used the following OpenOCB configuration, the autoprobling will be used as I did not specify any taps. 
+In OpenOCB the autoprobing is done when the configuration does not specify any taps. 
 
 ```tcl
 source [find interface/jlink.cfg]
@@ -616,7 +576,7 @@ adapter speed $SPEED
 reset_config none
 ```
 
-The blind interrogation sucessfully discovered a single TAP on the chain with an `IDCODE` of `0x04a63093`. 
+The blind interrogation successfully discovered a single device on the chain with an `IDCODE` of `0x04a63093`. 
 
 ```
 gp@workhorse:~/tools/openocd_jlink_test/autoprob$ openocd
@@ -640,7 +600,7 @@ Warn : gdb services need one or more targets defined
 ```
 
 Comparing against the `UltraScale Architecture Configuration User Guide (UG570)` we see that this `IDCODE` matches up
-perfectly with the expected value for the `KU3P`. 
+precisely with the expected value for the `KU3P`. 
 
 {{< figure
     src="idcode.png"
@@ -648,10 +608,8 @@ perfectly with the expected value for the `KU3P`.
     caption="JTAG and IDCODE for UltraScale Architecture-based FPGAs"
 >}}
 
-By default OpenOCB assumes a JTAG instruction lenght of 2 bits while our FPGA actually have an IR length of 6 bits. 
-This is the root cause behind the IR capture error encountered during autoprobing `JTAG and IDCODE for UltraScale Architecture-based FPGAs`.
-We can confirm this was our issues as, when we update our simple probling script to determine the `IDCODE` of a single 
-TAP with an IR length of 6 bits we can re-detert the FPGA with no additional errors. 
+By default OpenOCB assumes a JTAG IR length of 2 bits, while our FPGA has an IR length of 6 bits. 
+This is the cause behind the IR capture error encountered during autoprobing. By updating the script with an IR length of 6 bits we can re-detect the FPGA with no errors. 
 
 ```tcl
 source [find interface/jlink.cfg]
@@ -683,7 +641,7 @@ Info : JTAG tap: auto_detect.tap tap/device found: 0x04a63093 (mfg: 0x049 (Xilin
 Warn : gdb services need one or more targets defined
 ```
 
-Thus based on the probing, this is the JTAG scan chain for our board : 
+Based on the probing, this is the JTAG scan chain for our board : 
 
 {{< figure 
     src="scan_chain.svg"
@@ -691,12 +649,12 @@ Thus based on the probing, this is the JTAG scan chain for our board :
     caption="JTAG scan chain for the alibaba cloud FPGA"
 >}}
 
-## Systerm Monitor Registers
+## System Monitor Registers
 
-Previous generations of Xilinx FPGA had a system called the XADC that, among other things, 
+Previous generations of Xilinx FPGA had a system called the XADC that, among other features, 
 allowed you to acquire chip temperature and voltage readings. The newer UltraScale and UltraScale+ 
 family have deprecated this XADC module in favor of the SYSMON (and SYSMON4) which allows you to also 
-get these temperature readings but better.
+get these temperature readings, just better.
 
 Unfortunately, openOCD didn't have support for reading the SYSMON over JTAG out of the box, so I will be adding it.
 
@@ -708,16 +666,16 @@ For full context, there are 3 flavors of SYSMON:
 - `SYSMON1` used in the Kintex and Virtex UltraScale series
 - `SYSMON4` used in the Kintex, Virtex and in the Zynq programmable logic for the UltraScale+ series 
 - `SYSMON` used in the Zynq in the processing system of the UltraScale+ series. \
-Yes, you read that correctly the Zynq of the UltraScale+ series feature not one, but at least two unique sysmon instances. 
+Yes, you read that correctly the Zynq of the UltraScale+ series features not one, but at least two unique SYSMON instances. 
 
-Ultimately, for the purpose of this article, all these instances are similar enough that I will be using the terms SYSMON4 and SYSMON interchangeably.
+For the purpose of this article, all these instances are similar enough that I will be using the terms SYSMON4 and SYSMON interchangeably.
 
 {{< /alert >}} 
 
 In order for the JTAG to interact with the SYSMON, we first need to write the `SYSMON_DRP` command to the 
 JTAG Instruction Register (IR). 
-Looking at the documentation, we see that this command has a value of `0x37`. Funnily enough, 
-this has the same command code as the XADC, solidifying the SYSMON as the XADC's descendant.
+Based on the documentation, we see that this command has a value of `0x37`, which funnily enough, 
+is the same command code as the XADC, solidifying the SYSMON as the XADC's descendant.
 
 The SYSMON offers a lot more additional functionalities than just being used to read voltage and temperature, 
 but for today's use case we will not be using any of that. Rather, we will focus only on reading a 
@@ -727,8 +685,114 @@ These status registers are located at addresses `(00h-3Fh, 80h-BFh)`,
 and contain the measurement results of the analog-to-digital conversions, the flag registers,
  and the calibration coefficients. We can select which address we wish to read by writing the 
 address to the Data Register (DR) over JTAG and the data will be read out of `TDO`.
+```tcl
+# SPDX-License-Identifier: GPL-2.0-or-later
 
-I then added this sequence to read the current chip temperature, internal and external 
+# Xilinx SYSMON4 support
+#
+# Based on UG580, used for UltraScale+ Xilinx FPGA
+# This code implements access through the JTAG TAP.
+#
+# build a 32 bit DRP command for the SYSMON DRP
+proc sysmon_cmd {cmd addr data} {
+	array set cmds {
+		NOP 0x00
+		READ 0x01
+		WRITE 0x02
+	}
+	return [expr {($cmds($cmd) << 26) | ($addr << 16) | ($data << 0)}]
+}
+
+# Status register addresses
+# Some addresses (status registers 0-3) have special function when written to.
+proc SYSMON {key} {
+	array set addrs {
+		TEMP 0x00
+		VCCINT 0x01
+		VCCAUX 0x02
+		VPVN 0x03
+		VREFP 0x04
+		VREFN 0x05
+		VCCBRAM 0x06
+		SUPAOFFS 0x08
+		ADCAOFFS 0x09
+		ADCAGAIN 0x0a
+		VCCPINTLP 0x0d
+		VCCPINTFP 0x0e
+		VCCPAUX 0x0f
+		VAUX0 0x10
+		VAUX1 0x11
+		VAUX2 0x12
+		VAUX3 0x13
+		VAUX4 0x14
+		VAUX5 0x15
+		VAUX6 0x16
+		VAUX7 0x17
+		VAUX8 0x18
+		VAUX9 0x19
+		VAUX10 0x1a
+		VAUX11 0x1b
+		VAUX12 0x1c
+		VAUX13 0x1d
+		VAUX14 0x1e
+		VAUX15 0x1f
+		MAXTEMP 0x20
+		MAXVCC 0x21
+		MAXVCCAUX 0x22
+	}
+	return $addrs($key)
+}
+
+# transfer
+proc sysmon_xfer {tap cmd addr data} {
+	set ret [drscan $tap 32 [sysmon_cmd $cmd $addr $data]]
+	runtest 10
+	return [expr "0x$ret"]
+}
+
+# sysmon register write
+proc sysmon_write {tap addr data} {
+	sysmon_xfer $tap WRITE $addr $data
+}
+
+# sysmon register read, non-pipelined
+proc sysmon_read {tap addr} {
+	sysmon_xfer $tap READ $addr 0
+	return [sysmon_xfer $tap NOP 0 0]
+}
+
+
+# Select the sysmon DR, SYSMON_DRP has the same binary code value as the XADC
+proc sysmon_select {tap} {
+	set SYSMON_IR 0x37
+	irscan $tap $SYSMON_IR
+	runtest 10
+}
+
+# convert 16 bit temperature measurement to Celsius
+proc sysmon_temp_internal {code} {
+	return [expr {$code * 509.314/(1 << 16) - 280.23}]
+}
+
+# convert 16 bit supply voltage measurments to Volt
+proc sysmon_sup {code} {
+	return [expr {$code * 3./(1 << 16)}]
+}
+
+# measure all internal voltages
+proc sysmon_report {tap} {
+	puts "Sysmon status report :"
+	sysmon_select $tap
+	foreach ch [list TEMP MAXTEMP] {
+		echo "$ch [format %.2f [sysmon_temp_internal [sysmon_read $tap [SYSMON $ch]]]] C"
+	}
+	foreach ch [list VCCINT MAXVCC VCCAUX MAXVCCAUX] {
+		echo "$ch [format %.3f [sysmon_sup [sysmon_read $tap [SYSMON $ch]]]] V"	
+	}
+}
+```
+
+I added a report that reads the current chip temperature, internal and external 
 voltages as well as the maximum values for these recorded since FPGA power cycle, to my flashing script output:
 ```
 gp@workhorse:~/tools/openocd_jlink_test$ openocd
@@ -753,17 +817,14 @@ MAXVCC 0.855 V
 VCCAUX 1.805 V
 MAXVCCAUX 1.807 V
 ```
-These readings seem coherent and the external voltage closely resembles the voltage the debug probe is recording.
 
 # Pinout 
 
 
 To my indescribable joy I happened to stumble onto this gold mine, in which we get the board pinout.
 This most likely fell off a truck: https://blog.csdn.net/qq_37650251/article/details/145716953 
-(If you cannot access the full article, inspect the html source)
 
-This gives us the following pinout. 
-So far this pinout looks correct and I haven't spotted any glaring issues with it.
+So far this pinout looks correct.
 
 
 | Pin Index | Name | IO Standard | Location | Bank |
@@ -841,13 +902,13 @@ So far this pinout looks correct and I haven't spotted any glaring issues with i
 
 ## Global clock 
 
-On an UltraScale+, high-speed global clocks are typically driven from external sources, 
-often using differential pairs for better signal integrity.
+On high end FPGAs like the UltraScale+ family, high-speed global clocks are typically driven from external sources 
+using differential pairs for better signal integrity.
 
 
 According to the pinout we have two such differential pairs.
 
-My first order of business is determining which of these two I can use to easily drive my global clocks.
+First I must determine the nature of these external reference clocks to see how I can use them to drive my clocks.
 
 These differential pairs are provided over the following pins:
 - 100MHz : {E18, D18} 
@@ -910,18 +971,69 @@ PIN_FUNC_COUNT          int     true       2
 PKGPIN_BYTEGROUP_INDEX  int     true       8
 PKGPIN_NIBBLE_INDEX     int     true       2
 ```
-We can now confirm the following items:
+This tells us:
 * The differential pairings are correct: {K6, K7}, {E18, D18}
 * We can easily use the 100MHz as a source to drive our global clocking network
 * The 156.25MHz clock is to be used as the reference clock for our GTY transceivers and lands on bank 227 as indicated by the `PIN_FUNC` property `MGTREFCLK0N_227`
 * We cannot directly use the 156.25MHz clock to drive our global clock network
 
-With all this we have sufficient information to write a constraint file (`xdc`) for this board. The next challenge is getting the bitstream onto the FPGA.
+With all this we have sufficient information to write a constraint file (`xdc`) for this board. 
+
+# Test design 
+
+Further sections will be using the following design files. 
+
+`top.v`:
+```sv
+module top (
+    input wire Clk_100mhz_p_i, 
+    input wire Clk_100mhz_n_i,
+
+    output wire [3:0] Led_o 
+);
+    wire        clk_ibuf;
+    reg  [28:0] ctr_q; 
+    reg         unused_ctr_q;
+
+
+    IBUFDS #(
+        .DIFF_TERM("TRUE"),
+        .IOSTANDARD("LVDS")
+    ) m_ibufds (
+        .I(Clk_100mhz_p_i),
+        .IB(Clk_100mhz_n_i),
+        .O(clk_ibuf)
+    );
+
+    BUFG m_bufg (
+        .I(clk_ibuf),
+        .O(clk)
+    );
+
+    always @(posedge clk)
+        { unused_ctr_q, ctr_q } <= ctr_q + 29'b1;    
+    
+    assign Led_o = ctr_q[28:25];
+endmodule
+```
+`alibaba_cloud.xdc` : 	
+```xdc
+# Global clock signal 
+set_property -dict {LOC E18 IOSTANDARD LVDS} [get_ports Clk_100mhz_p_i]
+set_property -dict {LOC D18 IOSTANDARD LVDS} [get_ports Clk_100mhz_n_i]
+create_clock -period 10 -name clk_100mhz [get_ports Clk_100mhz_p_i]
+
+# LEDS
+set_property -dict {LOC B11 IOSTANDARD LVCMOS18} [get_ports { Led_o[0]}]
+set_property -dict {LOC C11 IOSTANDARD LVCMOS18} [get_ports { Led_o[1]}]
+set_property -dict {LOC A10 IOSTANDARD LVCMOS18} [get_ports { Led_o[2]}]
+set_property -dict {LOC B10 IOSTANDARD LVCMOS18} [get_ports { Led_o[3]}]
+```
 
 # Writing the bitstream
 
 My personal belief is that one of the most important contributors to design quality is iteration cost. 
-The lower your iteration cost, the higher your design quality is going to be given the same amount of people and time.
+The lower your iteration cost, the higher your design quality is going to be.
 
 As such I will invest the small upfront cost to have the workflow be as streamlined as efficiently feasible.
 
@@ -931,36 +1043,117 @@ the command line interfaces and only interacting with the tools, Vivado in this 
 ## Vivado flow 
 
 
-The goal of this flow is to, given a few verilog design and constraint files produce a SVF file. 
-We will breaking this down into 3 steps : 
-1. creating the vivado project
-2. running the implementation 
-3. generating the bitstream and the SVF 
+The goal of this flow is to, given a few verilog design and constraint files produce a SVF file. Our steps are : 
+1. creat the Vivado project `setup.tcl`
+2. run the implementation `build.tcl`
+3. generate the bitstream and the SVF `gen.tcl`
 
-Although I recognist this isn't a widespead practice for hardware projects, 
-I will be using a makefile order to corrdinate and manage the dependancies between the different step.
+I will be using `make` to kick off and manage the dependencies between the different steps, though I recognise this isn't a widespread practice for hardware projects. `make` is a highly flexible, reliable and powerful tool and I believe its ability to tie together any type of workflow makes it a prime tool for this use case. 
 
-We will be invoking vivado in batch mode, this allows us to provide a tcl script alongside script arguments, the 
+
+We will be invoking Vivado in batch mode, this allows us to provide a tcl script alongside script arguments, the 
 format is as following : 
 
 ```bash
 vivado -mode batch <path to tcl script> -tclargs <script args>
 ```
 
-Although this allows us to easily break down our flow into incremental stages, proceeding in this manner has the 
-drawback of restarting vivado and needing to re-load the project or the project checkpoint on each invokation. 
+Though this allows us to easily break down our flow into incremental stages, invoking a single script in batch mode has the 
+drawback of restarting Vivado and needing to re-load the project or the project checkpoint on each invocation. 
 
-As such, as the project size and complexity grows so will the project load time, so segmenting the
-flow into a large number of independant scripts and invoking them in batch mode does come at an increasing cost. 
-But for small scale projects this added flexibility doesn't come at a significiant cost. 
+As the project size grows so will the project load time, so segmenting the
+flow into a large number of independent scripts comes at an increasing cost. 
 
-I will not go though the entire build flow in detail and will directly jump towards genreating the SVF file. 
+Makefile : 
+```makefile
+SHELL := /bin/bash
+
+VIVADO_PRJ_DIR=prj
+VIVADO_PRJ_NAME=$(VIVADO_PRJ_DIR)
+VIVADO_PRJ_PATH=$(VIVADO_PRJ_DIR)/$(VIVADO_PRJ_NAME).xpr
+VIVADO_CHECKPOINT_PATH=$(VIVADO_PRJ_DIR)/$(VIVADO_PRJ_NAME)_checkpoint.dcp
+
+VIVADO_CMD=vivado -mode batch -source
+
+SRC_PATH=src
+OUT_DIR=out
+
+
+all: setup build gen
+
+$(VIVADO_PRJ_PATH):  
+    mkdir -p $(VIVADO_PRJ_DIR)
+    $(VIVADO_CMD) setup.tcl -tclargs $(VIVADO_PRJ_DIR) $(VIVADO_PRJ_NAME)
+
+setup: $(VIVADO_PRJ_PATH) 
+
+$(VIVADO_CHECKPOINT_PATH): $(VIVADO_PRJ_PATH) $(wildcard $(SRC_PATH)/*.xdc) $(wildcard $(SRC_PATH)/*.v)
+    $(VIVADO_CMD) build.tcl -tclargs $(VIVADO_PRJ_PATH) $(SRC_PATH) $(VIVADO_CHECKPOINT_PATH)
+
+build: $(VIVADO_CHECKPOINT_PATH)
+
+$(OUT_DIR)/$(VIVADO_PRJ_NAME).svf: $(VIVADO_CHECKPOINT_PATH) 
+    mkdir -p $(OUT_DIR)
+    $(VIVADO_CMD) gen.tcl -tclargs $(VIVADO_CHECKPOINT_PATH) $(OUT_DIR)
+
+gen: $(OUT_DIR)/$(VIVADO_PRJ_NAME).svf
+
+flash: $(OUT_DIR)/$(VIVADO_PRJ_NAME).svf
+    openocd	
+
+clean: 
+    rm -rf $(VIVADO_PRJ_DIR)
+    rm -rf $(OUT_DIR)
+    rm -f vivado*{log,jou}
+    rm -f webtalk*{log,jou}
+    rm -f usage_statistics_webtalk*{html,xml}
+```
+
+setup.tcl :
+```tcl
+set project_dir [lindex $argv 0]
+set project_name [lindex $argv 1]
+
+puts "Creating project $project_name at path [pwd]/$project_dir"
+create_project -part xcku3p-ffvb676-2-e -force $project_name $project_dir
+
+close_project
+exit 0
+```
+
+build.tcl : 
+```tcl
+set project_path [lindex $argv 0]
+set src_path [lindex $argv 1]
+set checkpoint_path [lindex $argv 2]
+puts "Implementation script called with project path $project_path and src path $src_path, generating checkpoint at $checkpoint_path"
+
+open_project $project_path 
+
+# load src
+read_verilog [glob -directory $src_path *.v]
+read_xdc [glob -directory $src_path *.xdc]
+
+
+# synth
+synth_design -top top
+
+# implement
+opt_design
+place_design
+route_design
+phys_opt_design
+
+write_checkpoint $checkpoint_path -force 
+close_project
+exit 0
+```
 
 ### Generating the SVF file
 
-The SVF for Serial Vector Format is a human readable, vendor agnositc speficiation used to specify JTAG bus operations.
+The SVF for Serial Vector Format is a human readable, vendor agnostic specification used to specify JTAG bus operations.
  
-Example SVF file containing a simple test program: 
+Example SVF file, test program: 
 ```svf 
 ! Initialize UUT
 STATE RESET;
@@ -989,28 +1182,27 @@ STATE RESET;
 ! End Test Program
 ``` 
 
-Vivado has the possibility of generating a hardware aware SVF file for configuring our FPGA, allowing us to program
-it independantly of any vendor tooling.
+Vivado can generate a hardware aware SVF file containing the configuration sequence for an FPGA board, allowing us to write a bitstream.
 
-Since the SVF file litterally contains the bitstream written in clear hexademical, in the file, our first step is to generate
+Given the SVF file literally contains the bitstream written in clear hexademical, in the file, our first step is to generate
 our design's bitstream. 
 
-Vivado proper isn't the software that generates the SVF file, rather this task is done by the hardware manager,
-this program handles the all flashing sequences.
+Vivado proper isn't the software that generates the SVF file, rather this task is done by the hardware manager:
+it handles all of the configuration.
   
-Using the tcl commenad line we can launch a new instance `open_hw_manager` and connect to it `connect_hw_server`. 
-Then, since JTAG is a daisy chainned bus, and given the SVF file is just a standardised way of specifying 
-JTAG bus operations, in order to genreate a correct JTAG configuratoin sequence, we must inform the hardware manger 
-of what our JTAG chain looks like. 
+We can launch a new instance `open_hw_manager` and connect to it `connect_hw_server`. 
+Since JTAG is a daisy chained bus, and given the SVF file is just a standardised way of specifying 
+JTAG bus operations, in order to generate a correct JTAG configuration sequence, we must inform the hardware manger 
+of our scan chain. 
 
-Thanks to our ealier probing of the scan chain, have established that out FPGA is the only device on the chain. 
-To inform the hardware manager we must create a new device configureation ( the term "device" refers to the "board"
-in this case ) and add our fpga to the chain using the `create_hw_device -part <device name>`. If we had multiple
-devices we should register them following the order they appear on the chain. 
+During our earlier probing of the scan chain, we have established that our FPGA is the only device on the chain. 
+We inform that hardware manager of this by creating a new device configuration ( the term "device" refers to the "board"
+here ) and add our fpga to the chain using the `create_hw_device -part <device name>`.When we have multiple
+devices we should register them following the order in which they appear on the chain. 
 
-Finally to genereate the svf file, we must first select the device we wish to program `program_hw_device <hw_device>`, in our case we will select the
-device we have just created, the we can write out the svf to the file using `write_hw_svf <path to svf file>`.
+Finally to generate the svf file, we must select the device we wish to program `program_hw_device <hw_device>`, then write out the svf to the file using `write_hw_svf <path to svf file>`.
 
+gen.tcl:
 ```tcl
 set checkpoint_path [lindex $argv 0]
 set out_dir [lindex $argv 1]
@@ -1052,12 +1244,9 @@ close_hw_manager
 exit 0
 ```
 
-## Configuraing the FPGA using OpenOCD 
+## Configuring the FPGA using OpenOCD 
 
-At this point we have both a raw bitstream and the bitstream wrapped with the programming sequence 
-in the SVF file. 
-
-Although not very widespread openOCD has a very nice `svf` replay command :
+Although not widespread openOCD has a very nice `svf` replay command :
 
 ```
 18.1 SVF: Serial Vector Format
@@ -1084,12 +1273,49 @@ according to the current JTAG chain configuration, targeting tapname;
 − [-]ignore_error continue execution despite TDO check errors.
 ``` 
 
-We invoke it in our openOCD script as : 
+We invoke it in our openOCD script using the `-progress` option for additional logging : 
 ```
-svf $svf_path -progress
+set svf_path "out/project_prj_checkpoint.svf"
+
+source [find interface/jlink.cfg]
+transport select jtag
+
+set SPEED 1
+jtag_rclk $SPEED
+adapter speed $SPEED 
+reset_config none
+
+# jlink config
+
+set CHIPNAME XCKU3P
+set CHIP $CHIPNAME
+puts "set chipname "$CHIP
+
+source [find ../openocd/tcl/cpld/xilinx-xcu.cfg]
+
+source [find ../openocd/tcl/fpga/xilinx-sysmon.cfg]
+
+init 
+
+puts "--------------------"
+
+sysmon_report $CHIP.tap
+
+puts "--------------------"
+
+# program
+if {![file exists $svf_path]} {
+    puts "Svf path not found : $svf_path"
+    exit
+}
+
+svf $svf_path -progress 
+ 
+exit 
 ```
 
-Full flashing sequence log : 
+
+Flashing sequence log : 
 
 ```
 gp@workhorse:~/tools/openocd_jlink_test$ openocd
@@ -1149,14 +1375,8 @@ adapter speed: 10000 kHz
 Info : Listening on port 6666 for tcl connections
 Info : Listening on port 4444 for telnet connections
 ```
-Restulting in a sucessful flashing of our FPGA. 
+Resulting in a successfully configured our FPGA. 
 
-I will spare you yet another christmas light demonstration video and will come back to edit this 
-article if I spot any issues with the pinnout for the PCIe and SFP+ in the future. 
-
-If we where to take example on the Vivado generated programming sequence in the SVF file, 
-we should be able to replicate the programming sequence with openOCD
-, allowing us to directly read out the bitstream content and remove the need for a SVF file altogether. 
 
 # Conclusion
 
@@ -1180,4 +1400,7 @@ making this perhaps the most cost effective entry point for a Kintex UltraScale+
 [3] Alinx Kintex UltraScale+ dev boards : https://www.en.alinx.com/Product/FPGA-Development-Boards/Kintex-UltraScale-plus.html
 
 UltraScale Architecture Configuration User Guide (UG570) : https://docs.amd.com/r/en-US/ug570-ultrascale-configuration/Device-Resources-and-Configuration-Bitstream-Lengths?section=gyn1703168518425__table_vyh_4hs_szb
+
+
+
 
