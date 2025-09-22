@@ -928,7 +928,7 @@ and the 100MHz can be used as my global clock.
 We can confirm by querying the pin properties.
 
 **K6** properties : 
-```
+```tcl
 Vivado% report_property [get_package_pins K6]
 Property                Type    Read-only  Value
 BANK                    string  true       227
@@ -954,7 +954,7 @@ PKGPIN_NIBBLE_INDEX     int     true       0
 ```
 
 **E18** properties : 
-```
+```tcl
 Vivado% report_property [get_package_pins E18]
 Property                Type    Read-only  Value
 BANK                    string  true       67
@@ -1024,7 +1024,7 @@ module top (
 endmodule
 ```
 `alibaba_cloud.xdc` : 	
-```xdc
+```tcl
 # Global clock signal 
 set_property -dict {LOC E18 IOSTANDARD LVDS} [get_ports Clk_100mhz_p_i]
 set_property -dict {LOC D18 IOSTANDARD LVDS} [get_ports Clk_100mhz_n_i]
