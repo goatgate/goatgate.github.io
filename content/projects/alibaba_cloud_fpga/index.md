@@ -1426,4 +1426,6 @@ Linux kernel PCI classes: https://github.com/torvalds/linux/blob/7aac71907bdea16
 
 Truck-kun pinout: https://blog.csdn.net/qq_37650251/article/details/145716953
 
+Ebay listing: https://www.ebay.com/itm/167626831054?_trksid=p4375194.c101800.m5481
+
 OpenOCD documentation: https://openocd.org/doc-release/pdf/openocd.pdf
