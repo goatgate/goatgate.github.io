@@ -21,3 +21,8 @@ figcaption {
 #hero { 
 	height:0px;
 }
+
+.small-img-600 {
+max-height: 600px;
+max-weight: 600px;
+}

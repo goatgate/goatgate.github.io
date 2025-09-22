@@ -1193,8 +1193,8 @@ Vivado can generate a hardware aware SVF file containing the configuration seque
 Given the SVF file literally contains the bitstream written in clear hexademical, in the file, our first step is to generate
 our design's bitstream. 
 
-Vivado proper isn't the software that generates the SVF file, rather this task is done by the hardware manager:
-it handles all of the configuration.
+Vivado proper isn't the software that generates the SVF file, this task is done by the hardware manager which
+handles all of the configuration.
   
 We can launch a new instance `open_hw_manager` and connect to it `connect_hw_server`. 
 Since JTAG is a daisy chained bus, and given the SVF file is just a standardised way of specifying 
@@ -1202,11 +1202,12 @@ JTAG bus operations, in order to generate a correct JTAG configuration sequence,
 of our scan chain. 
 
 During our earlier probing of the scan chain, we have established that our FPGA is the only device on the chain. 
-We inform that hardware manager of this by creating a new device configuration ( the term "device" refers to the "board"
+We inform the hardware manager of this by creating a new device configuration ( the term "device" refers to the "board"
 here ) and add our fpga to the chain using the `create_hw_device -part <device name>`.When we have multiple
 devices we should register them following the order in which they appear on the chain. 
 
-Finally to generate the svf file, we must select the device we wish to program `program_hw_device <hw_device>`, then write out the svf to the file using `write_hw_svf <path to svf file>`.
+Finally to generate the SVF file, we must select the device we wish to program with `program_hw_device <hw_device>`, 
+then write out the SVF to the file using `write_hw_svf <path to svf file>`.
 
 `gen.tcl`:
 ```tcl
@@ -1252,7 +1253,7 @@ exit 0
 
 ### Configuring the FPGA using OpenOCD 
 
-Although not widespread openOCD has a very nice `svf` replay command :
+Although not widespread openOCD has a very nice `svf` execution command :
 
 {{< quote author="~ OpenOCD documentation" source="https://openocd.org/doc-release/html/Boundary-Scan-Commands.html#SVF_003a-Serial-Vector-Format" >}}
 #### 18.1 SVF: Serial Vector Format
@@ -1390,7 +1391,7 @@ Resulting in a successfully configured our FPGA.
 
 ## Conclusion
 
-For $200 we got a fully working decommissioned Alibaba Cloud accelerator featuring a Kintex UltraScale+ 
+For **$200** we got a fully working decommissioned Alibaba Cloud accelerator featuring a Kintex UltraScale+ 
 FPGA with an easily accessible debugging/programming interface and enough pinout information to define 
 our own constraint files.
 
@@ -1398,7 +1399,7 @@ We also have a fully automated Vivado workflow to implement our designs and the 
 and interface with the FPGA's internal JTAG accessible registers using an open source programming tool without 
 the need for an official Xilinx programmer.
 
-In the end, this project delivered a 5x cost savings over commercial boards (compared to the lowest cost $900-1050 Alinx alternatives), 
+In the end, this project delivered an at least 5x cost savings over commercial boards (compared to the lowest cost $900-1050 Alinx alternatives), 
 making this perhaps the most cost effective entry point for a Kintex UltraScale+ board.
 
 ## External ressources 
