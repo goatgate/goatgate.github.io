@@ -1,13 +1,13 @@
 --- 
-title: "Alibaba cloud FPGA: the bargain bin UltraScale+"
+title: "Alibaba cloud FPGA: the 200$ Kintex UltraScale+"
 description: "Using a decommissioned Alibaba cloud accelerator card as an FPGA dev board"
 summary: "No documentation, no problem!"
 tags: ["fpga", "ebay", "debugging", "linux", "hacking"]
 date: 2025-09-02
-showTableOfContentse: true
+showTableOfContents: true
 ---
 
-# Introduction
+## Introduction
 
 I was recently in the market for a new FPGA to start building my upcoming projects on. 
  
@@ -27,7 +27,7 @@ my choice was effectively narrowed to the FPGA chips available under the WebPack
 
 Unsurprisingly Xilinx are well aware of how top of the range the Virtex series are, 
 and doesn't offer any Virtex UltraScale+ chips with the webpack license. 
-That said, they do offer support for two very respectable Kintex UltraScale+ FPGA models, the `XCKU3P` and the `XCKU5P`. [1]
+That said, they do offer support for two very respectable Kintex UltraScale+ FPGA models, the `XCKU3P` and the `XCKU5P`. 
 
 {{< figure
     src="fpga_kintex.png"
@@ -83,17 +83,20 @@ was too great to ignore.
 
 As such, I aim for this article to become the documentation paving the way to though this mirage. 
 
-# The debugger challenge 
+## The debugger challenge 
 
 Xilinx's UG908 Programming and Debugging User Guide (Appendix D) specifies their blessed JTAG probe ecosystem for FPGA configuration and debug. Rather than dropping $100+ on yet another proprietary dongle that'll collect dust after the project ends, I'm exploring alternatives.
 The obvious tradeoff: abandoning Xilinx's toolchain means losing ILA integration. However, the ILA fundamentally just captures samples and streams them via JTAG USER registers, there's nothing preventing us from building our own logic analyzer with equivalent functionality and a custom host interface.
+
 Enter OpenOCD. While primarily targeting ARM/RISC-V SoCs, it maintains an impressive database of supported probe hardware and provides granular control over JTAG operations. More importantly, it natively supports SVF (Serial Vector Format), a vendor-neutral bitstream format that Vivado can export.
+
 The documentation landscape is admittedly sparse for anything beyond 7-series FPGAs, and the most recent OpenOCD documentation I could unearth was focused on Zynq ARM core debugging rather than fabric configuration. But the fundamentals remain sound: JTAG is JTAG, SVF is standardized, and the boundary scan architecture hasn't fundamentally changed.
+
 The approach should be straightforward: generate SVF from Vivado, feed it through OpenOCD with a commodity JTAG adapter, and validate the configuration. Worst case, we'll need to patch some adapter-specific quirks or boundary scan chain register addresses.
 Time to find out if this theory holds up in practice.
  
  
-# The plan 
+## The plan 
 
 So, to resume, the current plan is to buy a second hand hardware accelerator of eBay at a too good to be true price, and try to configure it
 with an unofficial probe using open source software without any clear official support.  
@@ -102,7 +105,7 @@ The answer to the obvious question you are thinking if you, like me, have been a
 As such, we need a plan for approaching this. 
 The goal of this plan is to outline incremental steps that will build upon themselves with the end goal of being able to use this as a dev board. 
 
-## 1 - Confirming the board works 
+### 1 - Confirming the board works 
  
 First order of business will be to confirm the board is showing signs of working as intended. 
 
@@ -111,7 +114,7 @@ still be in the flash.
 Given this board was used as an accelerator, we should be able to use that to confirm the board is working by either checking if 
 the board is presenting itself as a PCIe endpoint or if the SFP's are sending the ethernet PHY idle sequence. 
 
-## 2 - Connecting a debugger to it
+### 2 - Connecting a debugger to it
 
 The next step is going to be to try and connect the debugger.
 The eBay listing advertised there is a JTAG interface, but the picture is grainy enough that where that JTAG is and what pins are 
@@ -129,7 +132,7 @@ Although openOCD doesn't have SYSMON support out of the box it would be worth wh
 2. Having an easy side channel to monitor FPGA operating parameters 
 3. openOCD did have support for interfacing with the SYSMON’s ancestor, the XADC on the series 7, so it would be a nice contribution to make 
 
-## 3 - Figuring out the Pinout 
+### 3 - Figuring out the Pinout 
 
 The hardest part will be figuring out the FPGA's pinout and my clock sources. 
 The questions that need answering are : 
@@ -137,7 +140,7 @@ The questions that need answering are :
 - which transceivers are the SFPs connected to 
 - which transceivers is the PCIe connected to
 
-## 4 - Writing a bitstream 
+### 4 - Writing a bitstream 
 
 For now I will be focusing on writing a temporary configurations over JTAG to the CCLs and not re-writing the flash. 
 
@@ -150,7 +153,7 @@ all of the Vivado flow from taking the rtl to the SVF generation.
 Simple enough ?
 
 
-# Liveness test
+## Liveness test
 
 A few days later my prize arrived via express mail. 
 
@@ -161,7 +164,7 @@ A few days later my prize arrived via express mail.
 >}}
 
 Unexpectedly it even came with a free 25G SFP28 Huawei transceiver rated for a 300m distance and a single 1m long OS2 fiber patch cable. 
-This might not have been intentional as the transceiver was jammed in the SFP cage, but it was still very generous of them to include the fiber patch cable.
+This was likely not intentional as the transceiver was jammed in the SFP cage, but it was still very generous of them to include the fiber patch cable.
 
 {{< figure
     src="free_stuff.jpg"
@@ -173,12 +176,12 @@ The board also came with a travel case and half of a PCIe to USB adapter and a 1
 
 Overall the board looked a little worn, but both the transceiver cages and PCIe connectors didn't look to be damaged.
 
-## Standalone configuration 
+### Standalone configuration 
 
 Before real testing could start I first did a small power-up test using the PCIe to USB adapter that the seller provided. 
 I was able to do a quick check using the LEDs and the FPGAs dissipated heat that the board seemed to be powering up at a surface level (pun intended).
 
-## PCIe interface
+### PCIe interface
 
 {{< alert >}}
 As a reminder, this next section relies on the flash not having been wiped and still containing the previous user's design.
@@ -212,7 +215,7 @@ PCIe core subsystem.
 [    0.495759] pci 0000:01:00.0: [dabc:1017] type 00 class 0x020000
 ```
 
-### Background information 
+#### Background information 
 
 Since most people might not be intimately as familiar with PCIe terminology, allow me to 
 quickly document what is going on here. 
@@ -222,7 +225,9 @@ to the kernel, it read as `domain`:`bus`:`device`.`function`.
 
 `[14e4:2712]`: is the device's `[vendor id:device id]`, these vendor id identifiers are 
 assigned by the PCI standard body to hardware vendors. Vendors are then free to define there 
-own vendor id's. The full list of official vendor id's and released device id can be found : https://admin.pci-ids.ucw.cz/read/PC/14e4 or in
+own vendor id's. 
+
+The full list of official vendor id's and released device id can be found : https://admin.pci-ids.ucw.cz/read/PC/14e4 or in
 the linux kernel code : https://github.com/torvalds/linux/blob/7aac71907bdea16e2754a782b9d9155449a9d49d/include/linux/pci_ids.h#L160-L3256
 
 `type 01`: PCIe has two types of devices, bridges allowing the connection of multiple downstream devices to an 
@@ -231,10 +236,11 @@ Bridges are of type `01` and endpoints of type `00`.
 
 `class 0x60400`: is the PCIe device class, it categorizes the kind of function the device performs. It 
 uses the following format `0x[Base Class (8 bits)][Sub Class (8 bits)][Programming Interface (8 bits)]`, 
-( note : the sub class field might be unused ). 
-A list of class and sub class identifiers can be found: https://admin.pci-ids.ucw.cz/read/PD or in the linux codebase : https://github.com/torvalds/linux/blob/7aac71907bdea16e2754a782b9d9155449a9d49d/include/linux/pci_ids.h#L15-L158
+( note : the sub class field might be unused ).
+ 
+A list of class and sub class identifiers can be found: https://admin.pci-ids.ucw.cz/read/PD or again in the linux codebase : https://github.com/torvalds/linux/blob/7aac71907bdea16e2754a782b9d9155449a9d49d/include/linux/pci_ids.h#L15-L158
 
-### Dmesg log 
+#### Dmesg log 
 
 The two most interesting lines of the `dmesg` log are : 
 ```
@@ -243,7 +249,8 @@ The two most interesting lines of the `dmesg` log are :
 ```
 
 Firstly the PCIe subsystem logs that at `0000:00:00.0` it has discovered a Broadcom BCM2712 PCIe Bridge ( vendor id `14e4`, device id `0x2712` ).This bridge (type `01`) class `0x0604xx` tells us it is a PCI-to-PCI bridge, meaning it is essentially creating additional PCIe lanes downstream for endpoint devices or additional bridges.
-The subsystem then discovers a second device at `0000:01:00.0`, this is an endpoint (type `00`), and class `0x02000` tells us it is an ethernet networking equipment. 
+
+The subsystem then discovers a second device at `0000:01:00.0`, this is an endpoint (type `00`), and class `0x02000` tells us it is an ethernet networking equipment. \
 Of note `dabc` doesn't correspond to a known vendor id. 
 When designing a PCIe interface in hardware these 
 are parameters we can configured. Additionally, among the different ways Linux uses to identify which driver to load for a PCIe device 
@@ -254,7 +261,7 @@ This also helps identify your custom accelerator at a glance and use it to load 
 As such, it is not surprising to see an unknown vendor id appear for 
 an FPGA, this with the class as an ethernet networking device is a strong hint this is our board.
 
-### Full PCIe device status
+#### Full PCIe device status
 
 Dmesg logs have already given us a good indication that our FPGA board and its PCIe interface was working but to confirm with certainty that the device with vendor id `dabc` is our FPGA we now turn to `lspci`.
 `lscpi -vvv` is the most verbose output and gives us a full overview of the detected PCIe devices capabilities and current configurations.
@@ -422,7 +429,7 @@ As for the width of x1, that is expected since the Broadcom bridge is also only 
 Thus, we can finally confirm that this is our board and that the PCIe interface is working.
 We can now proceed to establishing the JTAG connection. 
 
-# JTAG interface 
+## JTAG interface 
 
 Xilinx FPGAs can be configured by writing a bitstream to their internal CMOS Configuration Latches (CCL).
 CCL is SRAM memory and volatile, thus the configuration is re-done on every power cycle.
@@ -431,7 +438,7 @@ or written from an external device, such as an embedded controller. But for deve
 
 This configuration is done by shifting in the entire FPGA bitstream into the device’s configuration logic over the JTAG bus.
 
-## FPGA board JTAG interface 
+### FPGA board JTAG interface 
 
 As promised by the original eBay listing the board did come with an accessible JTAG interface, and gloriously enough, this time there
 wasn't even the need for any additional soldering.
@@ -461,7 +468,7 @@ for our reset signal.
 
 This interface layout doesn't follow a standard layout so I cannot just plug in one of my debug probes, it requires some re-wiring.
 
-## Segger JLINK :heart: 
+### Segger JLINK :heart: 
 
 I do not own an AMD approved JTAG programmer. 
 
@@ -481,7 +488,7 @@ Note : I could also have used a USB Blaster, which considering it is literally a
     caption="20 pin segger JLink pinout"
     >}}
 
-### Wiring
+#### Wiring
 
 Rewiring : 
 
@@ -521,7 +528,7 @@ programming will be done at 10MHz.
 No issues were encountered at these speeds. 
 {{< /alert >}}
 
-## OpenOCD
+### OpenOCD
 
 OpenOCD is a free and open source on-chip debugger software that aims to be compatible with as many
 probes, boards and chips as possible.
@@ -539,7 +546,7 @@ having an entirely open toolchain, allows me to have more visibility
 as to what is going on and the ability to fix it.
 I cannot delve into a black box.
 
-### Building OpenOCD
+#### Building OpenOCD
 
 By default the version of OpenOCD that I got on my server via the official packet manager was outdated and missing features 
 I will need. 
@@ -550,7 +557,7 @@ Thus, in the following logs, I will be running OpenOCD version `0.12.0+dev-02170
 
 Note : I have also re-build the JLink libs from source. 
 
-## Determining the scan chain 
+### Determining the scan chain 
 
 Since I do not have the schematics for the board I do not know how many devices are daisy-chainned on the board JTAG bus. 
 Also, I want to confirm if the FPGA on the ebay listing is actually the one on the board. 
@@ -649,7 +656,7 @@ Based on the probing, this is the JTAG scan chain for our board :
     caption="JTAG scan chain for the alibaba cloud FPGA"
 >}}
 
-## System Monitor Registers
+### System Monitor Registers
 
 Previous generations of Xilinx FPGA had a system called the XADC that, among other features, 
 allowed you to acquire chip temperature and voltage readings. The newer UltraScale and UltraScale+ 
@@ -818,7 +825,7 @@ VCCAUX 1.805 V
 MAXVCCAUX 1.807 V
 ```
 
-# Pinout 
+## Pinout 
 
 
 To my indescribable joy I happened to stumble onto this gold mine, in which we get the board pinout.
@@ -900,7 +907,7 @@ So far this pinout looks correct.
 | 68 | pcie_rx7_p | - | AF2 | BANK224 |
 | 69 | pcie_perstn_rst | LVCMOS18 | A9 | BANK86 |
 
-## Global clock 
+### Global clock 
 
 On high end FPGAs like the UltraScale+ family, high-speed global clocks are typically driven from external sources 
 using differential pairs for better signal integrity.
@@ -979,7 +986,7 @@ This tells us:
 
 With all this we have sufficient information to write a constraint file (`xdc`) for this board. 
 
-# Test design 
+## Test design 
 
 Further sections will be using the following design files. 
 
@@ -1030,7 +1037,7 @@ set_property -dict {LOC A10 IOSTANDARD LVCMOS18} [get_ports { Led_o[2]}]
 set_property -dict {LOC B10 IOSTANDARD LVCMOS18} [get_ports { Led_o[3]}]
 ```
 
-# Writing the bitstream
+## Writing the bitstream
 
 My personal belief is that one of the most important contributors to design quality is iteration cost. 
 The lower your iteration cost, the higher your design quality is going to be.
@@ -1040,7 +1047,7 @@ As such I will invest the small upfront cost to have the workflow be as streamli
 Thus, my workflow evolved into doing practically everything over 
 the command line interfaces and only interacting with the tools, Vivado in this case, through tcl scripts.
 
-## Vivado flow 
+### Vivado flow 
 
 
 The goal of this flow is to, given a few verilog design and constraint files produce a SVF file. Our steps are : 
@@ -1149,7 +1156,7 @@ close_project
 exit 0
 ```
 
-### Generating the SVF file
+#### Generating the SVF file
 
 The SVF for Serial Vector Format is a human readable, vendor agnostic specification used to specify JTAG bus operations.
  
@@ -1244,7 +1251,7 @@ close_hw_manager
 exit 0
 ```
 
-## Configuring the FPGA using OpenOCD 
+### Configuring the FPGA using OpenOCD 
 
 Although not widespread openOCD has a very nice `svf` replay command :
 
@@ -1378,7 +1385,7 @@ Info : Listening on port 4444 for telnet connections
 Resulting in a successfully configured our FPGA. 
 
 
-# Conclusion
+## Conclusion
 
 For $200 we got a fully working decommissioned Alibaba Cloud accelerator featuring a Kintex UltraScale+ 
 FPGA with an easily accessible debugging/programming interface and enough pinout information to define 
@@ -1391,16 +1398,24 @@ the need for an official Xilinx programmer.
 In the end, this project delivered a 5x cost savings over commercial boards (compared to the lowest cost $900-1050 Alinx alternatives), 
 making this perhaps the most cost effective entry point for a Kintex UltraScale+ board.
 
-# Ressources 
+## External ressources 
 
-[1] Xilinx Vivado Supported Devices : https://docs.amd.com/r/en-US/ug973-vivado-release-notes-install-license/Supported-Devices 
+Xilinx Vivado Supported Devices : https://docs.amd.com/r/en-US/ug973-vivado-release-notes-install-license/Supported-Devices 
 
-[2] Official Xilinx dev board : https://www.amd.com/en/products/adaptive-socs-and-fpgas/evaluation-boards/ek-u1-kcu116-g.html
+Official Xilinx dev board : https://www.amd.com/en/products/adaptive-socs-and-fpgas/evaluation-boards/ek-u1-kcu116-g.html
 
-[3] Alinx Kintex UltraScale+ dev boards : https://www.en.alinx.com/Product/FPGA-Development-Boards/Kintex-UltraScale-plus.html
+Alinx Kintex UltraScale+ dev boards : https://www.en.alinx.com/Product/FPGA-Development-Boards/Kintex-UltraScale-plus.html
 
 UltraScale Architecture Configuration User Guide (UG570) : https://docs.amd.com/r/en-US/ug570-ultrascale-configuration/Device-Resources-and-Configuration-Bitstream-Lengths?section=gyn1703168518425__table_vyh_4hs_szb
 
+PCI vendor/device ID database: https://admin.pci-ids.ucw.cz/read/PC/14e4
 
+PCI device classes: https://admin.pci-ids.ucw.cz/read/PD
+
+Linux kernel PCI IDs: https://github.com/torvalds/linux/blob/7aac71907bdea16e2754a782b9d9155449a9d49d/include/linux/pci_ids.h#L160-L3256
+
+Linux kernel PCI classes: https://github.com/torvalds/linux/blob/7aac71907bdea16e2754a782b9d9155449a9d49d/include/linux/pci_ids.h#L15-L158
+
+Truck-kun pinout: https://blog.csdn.net/qq_37650251/article/details/145716953
 
 
