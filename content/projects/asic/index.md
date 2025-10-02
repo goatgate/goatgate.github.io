@@ -23,4 +23,6 @@ draft: true
 >}} 
 # Ressources 
 
+OpenROAD Documentation: https://openroad.readthedocs.io/en/latest/
+
 LibreLand Documentation : https://librelane.readthedocs.io/en/latest/getting_started/newcomers/index.html
