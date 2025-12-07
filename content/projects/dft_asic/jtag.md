@@ -1,3 +1,4 @@
+# DFT: Designed For Trouble 
 
 ## Mandatory JTAG instructions 
 
@@ -22,6 +23,15 @@ The active states are:
 - **Capture-DR**: Data on the external pins are sampled into the Boundary-scan Chain.
 - **Shift-DR**: The Internal Scan Chain is shifted by the TCK input.
 - **Update-DR**: Data from the scan chain is applied to output pins.
+
+## Viviado emulation
+
+Driving multiple clock, means finding multiple clk pins 
+```
+Vivado% get_package_pins -filter {IS_CLK_CAPABLE == 1 && BANK == 14}
+M18 M19 L17 K17 N17 P17 P18 R18
+```
+Bank 14 is basys3 pmodC port. 
 
 ## Ressources 
 
