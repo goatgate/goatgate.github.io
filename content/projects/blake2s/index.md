@@ -50,32 +50,31 @@ As such, this verification strategy employed a multi-layered defensive line:
 - **Simulation-based verification** formed the foundation. The design results where simulated using cocotb against an instrumented golden model (hashlib's blake2s version). 
 Testing included both directed test cases for the official test vectos and constrained random stimulus generation for broader coverag. 
 The goal wasn't just functional correctness, it was finding the bugs that an overly directed approach testing would miss.
-
-.
 - **FPGA emulation** because hardware without software is just expensive modern art that occasionally gets warm. Emulation provided the critical bridge between simulation and silicon. 
-The design was ported to a Basys3 FPGA (Xilinx Artix-7, board chosen for it's abundance of IO pins and next day amazone shipping) and connected to an RP2040 microcontroller via GPIO, 
-recreating the hardware-firmware interface planned for the final ASIC. 
-This environment enabled co-design and validation of both the accelerator and its firmware, catching protocol issues, and integration bugs that only manifest in real hardware operating at full speed.
+The design was ported to a Basys3 FPGA (Xilinx Artix-7, board chosen for it's abundance of IO pins and next day shipping on amazone) and connected to an RP2040 microcontroller via GPIO, 
+recreating the hardware/firmware interface planned for the final ASIC. 
+This environment enabled co-design and validation of both the accelerator and its firmware, catching protocol issues, and integration bugs that only manifest in the real hardware/MCU (MicroController Unit) setup.
 
 
-## Manufacturing: Where Theory Meets Reality
+### Theory Meets Reality
 
-On the ASIC side, correctness and timing were necessary but not sufficient. An actual tape-out introduces the additional constraint of manufacturability—ensuring the design can be physically fabricated with acceptable yield.
+On the ASIC side, design correctness and timing passing were necessary but not sufficient. 
+An actual tape-out introduces the additional constraint of: can we actually build this, can we get this to fit within the caracterized operating parameters, if we do build it, will it work ? 
+manufacturability—ensuring the design can be physically fabricated with acceptable yield.
 
-This involved two major challenges:
+This challenge involves two major axis:
+- **Design Rule Checking (DRC)** for the SKY130A process this meant staying within acceptable antenna ratios, and keeping all the wire slew rates and max capacitances within PDK spec. 
+Violations aren't simple suggestions, antenna violations for example translate directly, depending on how bad the violations are and there number, to manufacturing defects resulting in lower yield.
+- **Shuttle-imposed limitations** required designing within the constraints inherent to the Tiny Tapeout shuttle chip. The shared I/O architecture imposed 
+severe bandwidth limitations: 66 MHz input maximum, 33 MHz output due to weak buffer drivers, and only 24 total pins for all communication. 
+These weren't just inconveniences, they fundamentally shaped the architecture, capping performance more than any internal logic constraints.
 
-**Design Rule Checking (DRC)** for the SKY130A process meant satisfying thousands of geometric constraints: minimum metal widths, spacing rules, via enclosures, antenna ratios, and metal density requirements. Violations aren't suggestions—they're paths to manufacturing defects or outright fabrication failure.
+### What comes next
 
-**Shuttle-imposed limitations** required designing around constraints inherent to the Tiny Tapeout platform itself. The shared I/O architecture imposed severe bandwidth limitations: 66 MHz input maximum, 33 MHz output due to weak buffer drivers, and only 24 total pins for all communication. These weren't just inconveniences—they fundamentally shaped the architecture, capping performance more than any internal logic constraints.
+This article chronicles the journey from concept to tape-out of an the architectural decisions driven by area and bandwidth constraints.
+It's also a tale of what's now possible for individual designers in the era of open-source silicon.
 
-## What Follows
+The chip is currently in fabrication and in nine months, we'll know if this produced a functional cryptographic accelerator or an expensive paperweight.
 
-This article chronicles the journey from concept to tape-out: the architectural decisions driven by area constraints, the optimization strategies necessary to fit Blake2s into a footprint measured in hundreds of microns, the physical implementation challenges of routing 12,847 standard cells while satisfying Manhattan-style routing rules, and the firmware co-design required to actually use the accelerator.
-
-It's a story of tradeoffs—performance versus area, elegance versus pragmatism, best practices versus available resources. It's also a story of what's now possible for individual designers in the era of open-source silicon.
-
-The chip is currently in fabrication. In three months, we'll know if six months of work produced a functional cryptographic accelerator or an expensive lesson in what not to do.
-
-Either way, it's been one hell of a climb.
 
 
