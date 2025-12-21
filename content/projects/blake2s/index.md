@@ -1,4 +1,3 @@
-
 ## My Latest Bad Idea
 
 Some people have hobbies, I find that cryptographic hashing accelerators are fascinating engineering challenges. 
@@ -61,5 +60,107 @@ These weren't just inconveniences, they fundamentally shaped the architecture, c
 This article goes through the process from idea to tapeout. 
 
 The chip is currently in fabrication and in nine months, we'll know if this produced a functional cryptographic accelerator or an expensive paperweight.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Open Source Silicon 
+
+Before jumping deep into the weeds, I would first like to take a step back and give some context about the tools and shuttle program I will be using for this tapeout. 
+
+This won’t be an exhaustive list, and there are plenty of amazingly powerful tools that I won’t be mentioning, think of it as a list of my favorites. 
+
+
+> If you are already familiar with the Open Source Silicon workflow you can skip this section. 
+
+### OpenRoad 
+
+OpenRoad isn’t the name of a single tool as much as it is a family of ASIC design tools and is at the heart of the ASIC flow. 
+
+In conjunction with OpenSTA, which contains the timing engine, it includes the tools needed from taking a design from floorplanning through placement, clock tree synthesis, routing all the way to finishing. 
+
+The official OpenRoad documentation has a great breakdown of some of the main features : 
+
+Here are the main steps for a physical design implementation
+using OpenROAD;
+
+- `Floorplanning`
+  - Floorplan initialization - define the chip area, utilization
+  - IO pin placement (for designs without pads)
+  - Tap cell and well tie insertion
+  - PDN- power distribution network creation
+- `Global Placement` 
+  - Macro placement (RAMs, embedded macros)
+  - Standard cell placement
+  - Automatic placement optimization and repair for max slew,
+    max capacitance, and max fanout violations and long wires
+- `Detailed Placement`
+  - Legalize placement - align to grid, adhere to design rules
+  - Incremental timing analysis for early estimates
+- `Clock Tree Synthesis` 
+  - Insert buffers and resize for high fanout nets
+- `Optimize setup/hold timing`
+- `Global Routing`
+  - Antenna repair
+  - Create routing guides
+- `Detailed Routing`
+  - Legalize routes, DRC-correct routing to meet timing, power
+    constraints
+- `Chip Finishing`
+  - Parasitic extraction using OpenRCX
+  - Final timing verification
+  - Final physical verification
+  - Dummy metal fill for manufacturability
+  - Use KLayout or Magic using generated GDS for DRC signoff
+
+It was originally funded by DARPA and this thought warms my aching heart when I see my tax bill. 
+
+
+### LibreLane 
+
+Librelane is like a makefile the ties all of the ASIC tools together to build the ASIC flow. 
+
+It pulls in Verilator for lint checking, Yosys and abc for synthesis, OpenROAD for implementation, augmented with a few additional custom scripts to help complete the flow. 
+
+For this tapeout we will be using the “classic” variant of the librelane flow. 
+
+### Sky130A PDK 
+
+The PDK for Product Design Kit, is a integral part to making a digital ASIC design as it contains the cell libraries and their characterizations. It is literally the foundation upon which a digital design is built. Because of there nature PDK’s are foundry process specific, each PDK is tailored to the nature of a foundry and is typically designed by or in close cooperation with said foundry. 
+
+Typically getting access to a PDK requires at least signing an NDA with a foundry, and isn’t accessible to just anyone, so when Google partnered with the US based Skywater fab to release an open source PDK for there 130nm process. Google has additionally partnered with global foundries and released the gf180 for there 180nm MCU process. These open source PDKs have truly changed what was possible for open source silicon. 
+
+For this tapeout I will be targeting a sky130A process, this is a classic CMOS process without the magnetic RAM that differentiates it from the sky130B process. 
+
+### TinyTapeout
+
+TinyTapeout is an open shuttle program where multiple projects are pulled together and tapped out as part of the same chip. Participant projects are hardened as macro blocks, the size of which scales with the amount of purchased tiles. As such, projects range from the very tiny counter, to the more larger SoC. These projects are multiplexed together behind a shared mux, connected to a shared bus, and use common I/O (with a few exceptions). 
+The final chip users can program which project they want to enable. 
+
+The final chip is sold as part of a dev board which contains both the tinyTapeout chip, and is connected to a RP2040 MCU. 
+
+
 
 
