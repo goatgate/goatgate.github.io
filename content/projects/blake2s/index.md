@@ -93,7 +93,7 @@ Before jumping deep into the weeds, I would first like to take a step back and g
 This won’t be an exhaustive list, and there are plenty of amazingly powerful tools that I won’t be mentioning, think of it as a list of my favorites. 
 
 
-> If you are already familiar with the Open Source Silicon workflow you can skip this section. 
+> If you are already familiar with the Open Source Silicon ecosystem and workflow you can skip this section. 
 
 ### OpenRoad 
 
@@ -148,11 +148,12 @@ For this tapeout we will be using the “classic” variant of the librelane flo
 
 ### Sky130A PDK 
 
-The PDK for Product Design Kit, is a integral part to making a digital ASIC design as it contains the cell libraries and their characterizations. It is literally the foundation upon which a digital design is built. Because of there nature PDK’s are foundry process specific, each PDK is tailored to the nature of a foundry and is typically designed by or in close cooperation with said foundry. 
+The PDK for Product Design Kit, is an integral part to making a digital ASIC design as it contains the cell libraries and their characterizations for target operating parameters (temperature/voltage). It is literally the foundation upon which a digital design is built. Because of their nature PDK’s are foundry process specific, each PDK is tailored to the nature of a foundry and is typically designed by or in close cooperation with said foundry. 
 
 Typically getting access to a PDK requires at least signing an NDA with a foundry, and isn’t accessible to just anyone, so when Google partnered with the US based Skywater fab to release an open source PDK for there 130nm process. Google has additionally partnered with global foundries and released the gf180 for there 180nm MCU process. These open source PDKs have truly changed what was possible for open source silicon. 
 
 For this tapeout I will be targeting a sky130A process, this is a classic CMOS process without the magnetic RAM that differentiates it from the sky130B process. 
+More specifically for this tapeout I will be targeting the high density cell library `hd` and a typical operating temperature of 25C for a voltage of 3.3V. 
 
 ### TinyTapeout
 
@@ -163,4 +164,19 @@ The final chip is sold as part of a dev board which contains both the tinyTapeou
 
 
 
+## Architecture 
+
+As I said in the introduction, something that I find makes hashing algorithms particularly interesting to implement is how the same functionality can be designed for so differently given different PPA (power, performance, area) targets. 
+And in this project, there were a few external constraints that heavily weighed on this architectural direction. 
+
+### Realities constraints
+
+#### Area 
+
+A single sky130 Tiny Tapeout project tile, is, as the name forshadows, tiny … About 161x111.52 um or, about as large as to fit 256 bits worth of flip-flops on a good day.
+
+Projects come in a set of varying sizes, from the smallest and more common single tile project, all the way to the 24 tile behemoth. But size isn't the only thing that scales, cost too scales, with a single tile costing 70 euros, projects thus range from 70 to 2240 euros. 
+
+I might be a little cheaper than the next person, so I will fight hard to save myself from parting with a few extra hundred euros.
+Unfortunately, I had not chosen the most favorable project in the circumstance. 
 
