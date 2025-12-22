@@ -193,16 +193,92 @@ From this explanation we can clearly see not only how blake2b needs twice the st
 ##### Storage
 
 So at a minimum, I need to store : 
-current blocks, 64-128 Bytes
+current blocks, 64-128 Bytes (b)
 internal state used by the mixing function 64-128 Bytes (v)
 current block result 32-64 Bytes (h)
 
-As a reminder, a single tile can fit 256 bits or 32 Bytes worth of D-FlipFlops if routing likes you, and here we are looking to store between 5 to 10 times just to get this project off the ground. 
+As a reminder, a single tile can fit 440 bits or 55 Bytes worth of D-FlipFlops at the very maximum, if you optimize only for dff count and push routing to the absolute limit. This is because D-FlipFlop cells, a combination of two latches, are some of the largest standard cells in the library. 
+
+For illustrating this area scale difference, here is the `sky130_fd_sc_hd__and2_1` cell, a 2 input and gate cell with a weak driver: 
+
+And here is the `sky130_fd_sc_hd__dfxbp_1` cell, a standard, complementary output d-flip-flop with the same weak output drive strength. 
+
+
+This flip-flop occupies 4 times the area of a simple and gate. 
+
+Yet, here we are looking to store at the strict and very optimistic minimum 3 to 6 tiles worth of just flip-flops just to get this project off the ground. 
 
 But, when it comes to on chip storage I have two major issues : 
-I currently have no knowledge of a proven SRAM for sky130. Though an experimental SRAM macro was submitted alongside this design on this shuttle including, given it is unproven, it would have risked losing the chip due to a bug. 
+There is currently no proven open source SRAM for sky130. Though an experimental SRAM macro was submitted alongside this design on this shuttle including, given it is unproven, it would have risked losing the chip due to a bug. 
 D-Flipflop cells, now my primary source of storage, each storage element takes up a lot of area. 
-In a perfect universe, given the massive amount of storage and the access pattern, storing data to an SRAM would have been ideal. In practice, using flops was my only feasible path. 
+In a perfect universe, given the relatively massive amount of storage and the access pattern, storing data to an SRAM would have been ideal. In practice, using flops was my only feasible path. 
 
-Originally I was planning on implementing the more popular blake2b, but after initial implementation runs showed this might have required a 24 block project (2240 euros) the design was re-focused on the smaller blake2s variant.  
+Given that the blake2b variant requires twice the on chip storage compared to the blake2s version, this area constraint guided the choice to implement the blake2s variant. 
+
+#### I/O bottleneck 
+
+The objective was to tapeout this design as part of the sky2b tinytapeout shuttle, as such, this design will be integrated as a pre-hardened macro block into the larger chip. Like most blocks, it will communicate with the pins though a shared mux, and not own any pins on its own. 
+In addition to a reset and clk signal, each block is given access to the following I/O : 
+8 input pins
+8 output pins
+8 configurable input/output pins
+
+> Although there is an option to purchase extra design exclusive pins, these cost an extra 100 euros per pin and are limited in number. 
+
+Since these are the shuttle’s shared I/O such, the design must respect whatever operating characteristics this shared I/O access imposes.  And, this is where two additional limitations arise:
+
+Firstly, the gpio cell has a characterized maximum operating frequency of 66 MHz when operating above 2.2V (we are operating at 3.3V). In practice, this caps the maximum frequency at which we can operate the parallel bus between our MCU and our design going over these pins. 
+
+Secondly, because of a weak driver on the output path (Design to MCU) leading to a slow slew rate, the maximum reliable operating frequency is 33MHz. Meaning that any transitions sent out over the parallel bus must not have a transition frequency over 33MHz or else risk signals being captured at the wrong level. 
+
+
+##### Putting it together 
+
+Given that additional metadata must be transmitted alongside the input data, and putting aside a few more bits for handshaking with the MCU, we are left with only 8 bits in both the input and output direction for data transfer. Given that, each hashing round of the mixing function is performed on an entire blocks data, before and compute can start, we must first accumulate all 64 Bytes of the next block before it can start computation. 
+
+Additionally, due to our area limitation, we can’t afford to spend an extra 64 Bytes, and pipeline this accumulation in parallel with the previous block’s compute. 
+As such, compute is stalled while we accumulate the next block. 
+
+In order the comply with the GPIO operating frequency limit, could operate the accelerator at 33 MHz and align the input bus frequency with the output frequency. But, because of the bottleneck imposed by the significant amount of cycles required to transfer the next block data, having an input bus with the highest operating frequency possible was paramount. As such, I made the decision to operate both the input and output bus at 66MHz, and compensate for the slow slew rate by holding data on the output interface for double the cycles. 
+Although it would have technically been possible to introduce a new faster internally internal clock domain to the accelerator and simply add a clock domain crossing between the internal logic and the input/output interfaces, given this internal clock domain would have been used to accelerate compute, and this design is bottlenecked by waiting on the input block data, doing so would not have yielded much of an improvement. 
+
+
+### Design 
+
+Given all these external constraints, the design’s direction was clear: this would be a blake2s implementation, with on chip storage and a focus on optimizing for area and a target operating frequency of 66 MHz.
+
+#### I/O bus protocol 
+
+Given have 8 input, 8 output, and 8 configurable input/ouput pins at our disposal to communicate between the MCU and the accelerator, the goal is to design a parallel bus protocol capable of  
+
+#### Hash configuration 
+
+During each hash function run the internal state (h) either during initialization of the first block, or during initialisation on the last block, the value of the internal variable is calculated based on a set of per hash function run configuration parameters. 
+These values are : 
+kk, key byte length 
+nn 
+ll
+In the software implementation, these are passed to the blake2s function when it is initially called. For our design given we cannot derive these from the input data, we also need a way to acquire these configuration parameters before the hash computation begins. 
+
+As such, in parallel to the block data transfer packet exists a configuration parameter transfer packet. This packet is set over the same 8 bit data input interface and is differentiated from the data transfers by the state of the data mode pins. 
+
+The packet has the following layout, uses little endian, and when sending multiple-byte-long arrays, the lower indexes are sent first : 
+
+
+The `byte_size_config` module (that lives under the `io_intf` module) identifies these configuration packets and is where parsing of this packet occurs. It output the latest seen values of `kk`, `nn` and `ll` directly to the main hashing modules, as such, the same configuration can be re-used across multiple runs of the accelerator. 
+
+#### Block data buffering
+
+A block data needs to be streamed over 64 cycles to the  
+
+#### Mixing function 
+
+#### Output streaming 
+ 
+
+The functionality needed to implement this design are as follows : 
+input buffer - buffer the incoming data byte, and re-assemble the data block 
+input metadata interpretation, helps identify what data transfer this is 
+
+
 
