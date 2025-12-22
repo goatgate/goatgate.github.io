@@ -180,3 +180,29 @@ Projects come in a set of varying sizes, from the smallest and more common singl
 I might be a little cheaper than the next person, so I will fight hard to save myself from parting with a few extra hundred euros.
 Unfortunately, I had not chosen the most favorable project in the circumstance. 
 
+##### Blake2
+
+In order to better explain why a blake2 implementation is such a challenge from an area optimization perspective, we must first take a step back and look at the algorithm itself. 
+
+As stated in the introduction, blake2 is a hashing function, its objective is to take a large amount of data and produce a high entropy and reproducible shorter hash. This hash can then be compared against an expected hash result to identify if the data has been corrupted or tampered with. 
+
+Internally, the blake2 hashing function breaks down the incoming data to be hashed into blocks of 64 bytes (blake2s) or 128 bytes (blake2b) and makes each blocks go though 10 (blake2s) or 12 (blake2b) rounds of a mixing function. This mixing function is performed on a per-block internal state the size of which matches the block size. The block result is then derived from this internal state and the final hash result is derived from the final block’s final result. 
+
+From this explanation we can clearly see not only how blake2b needs twice the storage requirement of blake2s but also how large the memory footprint of blake2 is. 
+
+##### Storage
+
+So at a minimum, I need to store : 
+current blocks, 64-128 Bytes
+internal state used by the mixing function 64-128 Bytes (v)
+current block result 32-64 Bytes (h)
+
+As a reminder, a single tile can fit 256 bits or 32 Bytes worth of D-FlipFlops if routing likes you, and here we are looking to store between 5 to 10 times just to get this project off the ground. 
+
+But, when it comes to on chip storage I have two major issues : 
+I currently have no knowledge of a proven SRAM for sky130. Though an experimental SRAM macro was submitted alongside this design on this shuttle including, given it is unproven, it would have risked losing the chip due to a bug. 
+D-Flipflop cells, now my primary source of storage, each storage element takes up a lot of area. 
+In a perfect universe, given the massive amount of storage and the access pattern, storing data to an SRAM would have been ideal. In practice, using flops was my only feasible path. 
+
+Originally I was planning on implementing the more popular blake2b, but after initial implementation runs showed this might have required a 24 block project (2240 euros) the design was re-focused on the smaller blake2s variant.  
+
