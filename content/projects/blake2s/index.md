@@ -255,9 +255,9 @@ Given have 8 input, 8 output, and 8 configurable input/ouput pins at our disposa
 
 During each hash function run the internal state (h) either during initialization of the first block, or during initialisation on the last block, the value of the internal variable is calculated based on a set of per hash function run configuration parameters. 
 These values are : 
-kk, key byte length 
-nn 
-ll
+kk, key length in bytes
+nn, resulting hash length in bytes
+ll, total length of the data to be hashed
 In the software implementation, these are passed to the blake2s function when it is initially called. For our design given we cannot derive these from the input data, we also need a way to acquire these configuration parameters before the hash computation begins. 
 
 As such, in parallel to the block data transfer packet exists a configuration parameter transfer packet. This packet is set over the same 8 bit data input interface and is differentiated from the data transfers by the state of the data mode pins. 
@@ -265,20 +265,32 @@ As such, in parallel to the block data transfer packet exists a configuration pa
 The packet has the following layout, uses little endian, and when sending multiple-byte-long arrays, the lower indexes are sent first : 
 
 
-The `byte_size_config` module (that lives under the `io_intf` module) identifies these configuration packets and is where parsing of this packet occurs. It output the latest seen values of `kk`, `nn` and `ll` directly to the main hashing modules, as such, the same configuration can be re-used across multiple runs of the accelerator. 
+The `byte_size_config` module (that lives under the `io_intf` module) identifies these configuration packets, parsing of this packet occurs. It output the latest seen values of `kk`, `nn` and `ll` directly to the main hashing modules, as such, the same configuration can be re-used across multiple runs of the accelerator. 
 
 #### Block data buffering
 
-A block data needs to be streamed over 64 cycles to the  
+A block data needs to be streamed over 64 cycles from the MCU to the ASIC. Like with the config parameter, there is a module dedicated in the design to tracking this data arrival, but because of the size of the buffer, directly translating to the area occupied by dffs, needed to hold this data. The block isn’t stored in memory in this module and it’s content is held stable over an interface in destination to the main hashing module. Rather, this module contains only the logic needed to identify when data is being received, the data offset, and a copy of the most recent byte. On the main hashing module side, this signals are received, and used to determinin the appending on the next incoming data byte to the block buffer. 
+
+This split allows there to be only the strictly necessary logic dedicated to this block data reception logic in the main hashing module while putting the majority of the block data streaming logic in the `block_data` also under the `io_intf`. 
+
+Now earlier I said that a byte index was included in the signals sent from the `block_data` to the main hashing module `blake2s`. 
+Contrarily to what intuition might suggest this byte index isn’t used to address the buffer on writes, the reason as to why is that this would require a 1-to-64 x8 wide demux logic to implement. This would be quite expensive in terms of area. Rather, we are using a less expensive shift buffer to write and works well for our application given bytes are streamed in order to the ASIC. 
+
+> If readers are interested in learning more about the area impact of different memory storage structures for sky130 `Toivoh` did a great study that can be found : [https://github.com/toivoh/tt08-on-chip-memory-test](https://github.com/toivoh/tt08-on-chip-memory-test)
+
+This byte index is actually used to keep track of the completion of the block data so that the main hash module can start computing the hash for the next block. 
 
 #### Mixing function 
 
+The mixing function is at the heart of the hashing function. 
+
+todo
+
 #### Output streaming 
  
+At the end of the hash computation of the last data block the ASIC starts streaming out the hash result. Eventhough 32 final hash bytes have been computed, only the first `nn` bytes will be streamed out ( dependent on the `nn` configuration parameter). Due to our slow slew rate on the output GPIO buffer, a “slow output mode” was designed who’s role is to hold each data transfer out of the ASIC over 2 cycles rather than one, leaving enough time for the signal to settle on the output pins. 
 
-The functionality needed to implement this design are as follows : 
-input buffer - buffer the incoming data byte, and re-assemble the data block 
-input metadata interpretation, helps identify what data transfer this is 
+The output streaming logic lives in the main hash module `blake2s` but result streaming doesn’t block the fsm from starting to wait for the next start of block to stream in. 
 
 
 
