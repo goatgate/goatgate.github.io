@@ -403,7 +403,7 @@ The full path through a single G function, including the data reads, was 69 logi
 
 Because of the above, this approach isn't technically feasible, and even if it was, the area expense might not have been worthwhile, as extra area could be better expensed elsewhere, for example, for adding a second block buffer to allow streaming the next block in parallel with hashing a current block.
 
-{{< alert "lightbulb" >}}
+{{< alert "heart" >}}
 If you have read until this point, you are either procrastinating or passionate about hardware design, in both cases, welcome.
 {{< /alert >}}
 
@@ -449,7 +449,9 @@ As such, even at the cost of more effort, my objective was to have this design i
 
 The new lineup of MCU silicon developed by Raspberry includes an unusual hardware block called the PIO (Programmable Input/Output), which is a tiny co-processor that allows for pin reads and writes in a deterministic and cycle-accurate fashion. Without going too far off-topic into the details, this is perfect for designing custom high-speed parallel bus protocols and supports my upper target of 66 MHz.
 
-> A future article is planned to go over the PIO in greater detail.
+{{< alert "edit" >}}
+A future article is planned to go over the PIO in greater detail.
+{{< /alert >}}
 
 The problem is that the PIO co-processor is tiny and supports only a subset of operations. As such, this custom bus protocol must be designed **around** the MCU hardware's capabilities.
 
@@ -461,7 +463,9 @@ To understand why these empty cycles occur, we need to take a step back and unde
 
 Internally, each SM is equipped with very little storage, as memory being expensive in terms of area is a universal struggle. Each SM can be configured to have up to 8x32 bits of FIFO storage, with up to 32 aligned bits accessible each cycle and a 32-bit wide output buffer. To write to a pin, we must first pull a full 32-bit FIFO entry into the output buffer, and only then can we write the contents of the output buffer to the pins. The PIO hardware allows us to configure the FIFO so that when the output buffer has been read to a trigger point, it automatically pulls the next available entry from the FIFO. Issues arise when the FIFO becomes empty and needs to be refilled.
 
-> The SM can only write to consecutive pins. To simplify wiring during emulation, this resulted in a 32-bit wide write, meaning a full FIFO entry was consumed per write. When using the Tiny Tapeout dev board, this can be optimized down to a 16-bit wide write, consuming a FIFO entry only every two writes.
+{{< alert "circle-info" >}}
+The SM can only write to consecutive pins. To simplify wiring during emulation, this resulted in a 32-bit wide write, meaning a full FIFO entry was consumed per write. When using the Tiny Tapeout dev board, this can be optimized down to a 16-bit wide write, consuming a FIFO entry only every two writes.
+{{< /alert  >}}
 
 This SM program writes to the parallel bus operating at 66 MHz. The RP2040 features a dual-core Cortex-M0+, and programs running on it are, to put it delicately, "slower than hardware." I cannot rely on a software program to poll the FIFO state and refill it as soon as an entry is free, as software runs orders of magnitude too slowly.
 
@@ -501,7 +505,8 @@ The hash results are of variable length, with a maximum length of 32 bytes. Rece
 Unfortunately, because of how the final Tiny Tapeout dev board MCU is wired, with `ui_in[0-3]` placed in the middle of the `uo_out` pins, we face a mapping challenge. Since the PIO hardware can only read and write consecutive pins, and we want our data to be aligned on 32-bit boundaries, the final version will require reading 16 bits each cycle to capture the necessary 8 bits.
 {{< /alert >}}
 
-Here again, the Cortex-M0+ cores are too slow for our use case, so we rely on the DMA to copy the contents of the full FIFO entries to memory. Unlike the data streaming example, where we could tolerate gaps, here we must guarantee that no bubbles are introduced in the read sequence. In this context, bubbles would occur if the RX FIFO and the input buffer were full, causing the pin read to stall until space became available, and dropping all incoming bytes in the meantime. The RX FIFO could reach capacity if our RX to memory DMA transfer were stalled by another peripheral using the shared internal hardware resources, such as a concurrent block data DMA transfer to a different state machine on the same PIO.
+Here again, the Cortex-M0+ cores are too slow for our use case, so we rely on the DMA to copy the contents of the full FIFO entries to memory. Unlike the data streaming example, where we could tolerate gaps, here we must guarantee that no bubbles are introduced in the read sequence. In this context, bubbles would occur if the RX FIFO and the input buffer were full, causing the pin read to stall until space became available, and dropping all incoming bytes in the meantime.\
+The RX FIFO could reach capacity if our RX to memory DMA transfer were stalled by another peripheral using the shared internal hardware resources, such as a concurrent block data DMA transfer to a different state machine on the same PIO.
 
 To prevent this scenario, we configure the DMA engine to give the highest priority to our transfer.
 
