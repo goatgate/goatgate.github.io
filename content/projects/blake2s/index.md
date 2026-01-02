@@ -610,6 +610,6 @@ It did cost a lot of time and energy but it was definitely worth the shot and I 
 
 {{< figure
     src="waffles.jpg"
-    caption="My reward for my final all nighter spent at fixing the implementation and making the emulator work."
-    alt="My reward for my final all nighter spent at fixing the implementation and making the emulator work."
+    caption=Celebration of the tapeout submission."
+    alt="My reward for tapeout submission."
 >}}
