@@ -135,6 +135,12 @@ For this tape-out, I will be targeting a sky130A process. This is a classic CMOS
 
 TinyTapeout is an open shuttle program where multiple projects are pulled together and taped out as part of the same chip. Participant projects are hardened as macro blocks, the size of which scales with the amount of purchased tiles. As such, projects range from the very tiny counter to the much larger SoC. These projects are multiplexed together behind a shared mux, connected to a shared bus, and use common I/O (with a few exceptions).
 
+{{< figure
+    src="full_chip.png"
+    caption="Full sky25b shuttle TinyTapeout chip render."
+    alt="Full sky25b shuttle TinyTapeout chip render. "
+>}}
+
 The final chip users can configure which project they want to enable during operation and all other designs will be power gated. The final chip is sold as part of a dev board, which contains both the TinyTapeout chip and is connected to an RP2040 MCU.
 
 # Architecture
@@ -274,17 +280,27 @@ At a minimum, I need to store:
 For context, a single tile can fit 440 bits, or 55 Bytes, of D-Flip-Flops at most, if you optimize solely for DFF count and push routing to the absolute limit. This is because D-Flip-Flop cells, a combination of two latches, are among the largest standard cells in the library.
 
 To illustrate this area scale difference, here is the `sky130_fd_sc_hd__and2_1` cell, a 2-input AND gate with a weak driver:
+{{< figure
+    src="sky130_fd_sc_hd__and2_1.svg"
+    caption="sky130_fd_sc_hd__and2_1"
+    alt="sky130_fd_sc_hd__and2_1"
+>}}
 
 And here is the `sky130_fd_sc_hd__dfxbp_1` cell, a standard complementary output D-Flip-Flop with the same weak output drive strength.
+{{< figure
+    src="sky130_fd_sc_hd__dfxbp_1.svg"
+    alt="sky130_fd_sc_hd__dfxbp_1"
+    caption="sky130_fd_sc_hd__dfxbp_1"
+>}}
 
-This flip-flop occupies four times the area of a simple AND gate.
+This flip-flop occupies five times the area of a simple AND gate.
 Yet, here we are looking to store, at the strict and very optimistic minimum, 3 to 6 tiles worth of flip-flops just to get this project off the ground.
+
 But, when it comes to on-chip storage, I have two major issues:
+
 There is currently no proven open-source SRAM for sky130. Although an experimental SRAM macro was submitted alongside this design on this shuttle, given that it is unproven, it would have risked losing the chip due to a bug.
 
-
 D-Flipflop cells, now my primary source of storage, each take up a lot of area.
-
 
 In a perfect universe, given the relatively massive amount of storage and the access pattern, storing data in SRAM would have been ideal. In practice, using flip-flops was my only feasible path.
 Given that the Blake2b variant requires twice the on-chip storage compared to the Blake2s version, this area constraint naturally guided the choice to implement the Blake2s variant.
@@ -293,6 +309,12 @@ Given that the Blake2b variant requires twice the on-chip storage compared to th
 ### I/O Bottleneck 
 
 The objective was to tape out this design as part of the `sky2b` TinyTapeout shuttle. As such, this design will be integrated as a pre-hardened macro block into the larger chip. Like most blocks, it will communicate with the pins through a shared mux and will not own any pins on its own.
+
+{{< figure
+    src="chip.svg"
+    caption="Tinytapeout chip"
+    alt="Tinytapeout chip"
+>}}
 
 In addition to a reset and clock signal, each block is given access to the following I/O:
 - 8 input pins
@@ -323,7 +345,7 @@ While it would have been technically possible to introduce a faster internal clo
 
 Given these external constraints, the design direction was clear: a BLAKE2s implementation using on-chip D-FlipFlops for storage, focusing on area optimization and a target operating frequency of 66 MHz.
 
-The design described by the following section can be found in my [github repository](https://github.com/Essenceia/blake2_asic/tree/main)
+The design described by the following section can be found on my [github repository](https://github.com/Essenceia/blake2_asic/tree/main)
 
 ### Hash Configuration 
 
@@ -338,10 +360,15 @@ As such, a configuration parameter transfer packet exists in parallel to the blo
 
 The packet follows a little-endian layout, when sending multi-byte arrays, the lower indices are sent first: 
 
+{{< figure
+    src="packet.svg"
+    caption="Hash configuration packet layout"
+    alt="Hash configuration packet layout"
+>}}
 
 The `byte_size_config` module (located under the `io_intf` module) identifies these configuration packets, parses and latches them. It outputs the most recent values of kk, nn, and ll directly to the main hashing modules. Consequently, the same configuration can be reused across multiple runs of the accelerator.
 
-[byte_size_config](https://github.com/Essenceia/blake2_asic/blob/0d474b0120cb0790c1552ccaddbd470c5be629f7/src/io_inft.v#L1-L57)
+[link to code: byte_size_config](https://github.com/Essenceia/blake2_asic/blob/0d474b0120cb0790c1552ccaddbd470c5be629f7/src/io_inft.v#L1-L57)
 
 ### Block Data Buffering
 
@@ -409,7 +436,7 @@ If you have read until this point, you are either procrastinating or passionate 
 
 The initial approach was to split the critical path through the G function into 2 cycles. This resulted in a 100% reduction of the hashing function performance, but this represents only a drop of 55% of the overall system performance when taking into account the block streaming dedicated cycles.
 
-[G function main code ](https://github.com/Essenceia/blake2_asic/blob/main/src/blake2_g.v)
+[link to code: G function main code ](https://github.com/Essenceia/blake2_asic/blob/main/src/blake2_g.v)
 
 This helps solve part of our timing issue, but the path is still quite deep due to the data read section at the start of this path.
 
@@ -417,15 +444,14 @@ As readers can imagine, the data read paths are bloated by a number of large mux
 
 Looking closer at the code, `a`, `b`, `c`, and `d` can each take a set of only 4 possible values, depending on the current G function call. By reworking the logic we can force the instantiation of only a 4-way muxing logic, greatly reducing logic cost and depth at the cost of some slightly more complex RTL.
 
-[mux rework](https://github.com/Essenceia/blake2_asic/blob/0d474b0120cb0790c1552ccaddbd470c5be629f7/src/blake2.v#L276-L336)
+[like to code: mux rework](https://github.com/Essenceia/blake2_asic/blob/0d474b0120cb0790c1552ccaddbd470c5be629f7/src/blake2.v#L276-L336)
 
 Now we have reduced the logic on our read path, timing is looking good, but the G function still takes 2 cycles, and although we are not optimizing primarily for performance, leaving so much performance on the table is … unfortunate. Luckily, looking closer at the algorithm, we can spot a few additional critical nuances:
 
 The `m` vector is not modified during a round, only read, so we can be flexible with the ordering of its reads.
 
-{{< katex >}}
-The `a`, `b`, `c`, and `d` indexes used to read and write the `v` vector when calling \(G_{n}\) not overlap with $$G_{n+1}$$\
- for $$n \in \{0,1,2,4,5,6\}$$. Though, there is overlap for n=3, d=15 and n=7,b=4.
+The `a`, `b`, `c`, and `d` indexes used to read and write the `v` vector when calling Gn not overlap with Gn+1 
+ for n ∈ {0,1,2,4,5,6}. Though, there is overlap for n=3, d=15 and n=7,b=4.
 
 With these observations, we can start pipelining our G function path. By this I mean, we can start the next G function instance as the previous instance is still going through its second cycle. Though because of the data dependencies noted for instances n=3 and n=7, this pipelining isn't perfect, and a nop cycle is imposed in order for the new values of `v[d]` and `v[b]` to become available for the next data read.
 
@@ -438,7 +464,7 @@ At the very end of the hash computation, the ASIC starts streaming out the hash 
 
 The output streaming logic lives in the main hash module `blake2s`, but result streaming doesn't block the FSM from starting to wait for the next start of the block to stream in.
 
-[output streaming](https://github.com/Essenceia/blake2_asic/blob/0d474b0120cb0790c1552ccaddbd470c5be629f7/src/blake2.v#L461-L488)
+[link to code: output streaming](https://github.com/Essenceia/blake2_asic/blob/0d474b0120cb0790c1552ccaddbd470c5be629f7/src/blake2.v#L461-L488)
 
 
 # Co-designing Firmware
@@ -487,7 +513,7 @@ With this implementation, the SM data write program sequence becomes :
 4. Stream out data until the block transfer is complete.
 5. Repeat.
 
-[data write pio program](https://github.com/Essenceia/blake2_asic/blob/0d474b0120cb0790c1552ccaddbd470c5be629f7/firmware/data_wr.pio#L27-L42) 
+[link to code: data write pio program](https://github.com/Essenceia/blake2_asic/blob/0d474b0120cb0790c1552ccaddbd470c5be629f7/firmware/data_wr.pio#L27-L42) 
 
 ## Result Valid
 
@@ -495,7 +521,7 @@ The PIO co-processor instruction set is small and simple, featuring only nine di
 
 As such, our parallel protocol requires the ASIC to assert the `hash_valid_o` signal one cycle before data starts flowing. This gives the state machine program enough time to identify the event and transition to the data capture routine. In a way, this is the digital equivalent of yelling "INCOMING!" before throwing your precious hash results overboard.
 
-[hash read pio program](https://github.com/Essenceia/blake2_asic/blob/0d474b0120cb0790c1552ccaddbd470c5be629f7/firmware/data_rd.pio#L3-L17) 
+[link to code: hash read pio program](https://github.com/Essenceia/blake2_asic/blob/0d474b0120cb0790c1552ccaddbd470c5be629f7/firmware/data_rd.pio#L3-L17) 
 
 ## Result to Memory
 
@@ -505,17 +531,29 @@ The hash results are of variable length, with a maximum length of 32 bytes. Rece
 Unfortunately, because of how the final Tiny Tapeout dev board MCU is wired, with `ui_in[0-3]` placed in the middle of the `uo_out` pins, we face a mapping challenge. Since the PIO hardware can only read and write consecutive pins, and we want our data to be aligned on 32-bit boundaries, the final version will require reading 16 bits each cycle to capture the necessary 8 bits.
 {{< /alert >}}
 
+{{< figure 
+    src="pcb.png"
+    caption="RP2040 wiring on the TinyTapeout dev board."
+    alt="RP2040 wiring on the TinyTapeout dev board."
+>}}
+
 Here again, the Cortex-M0+ cores are too slow for our use case, so we rely on the DMA to copy the contents of the full FIFO entries to memory. Unlike the data streaming example, where we could tolerate gaps, here we must guarantee that no bubbles are introduced in the read sequence. In this context, bubbles would occur if the RX FIFO and the input buffer were full, causing the pin read to stall until space became available, and dropping all incoming bytes in the meantime.\
 The RX FIFO could reach capacity if our RX to memory DMA transfer were stalled by another peripheral using the shared internal hardware resources, such as a concurrent block data DMA transfer to a different state machine on the same PIO.
 
 To prevent this scenario, we configure the DMA engine to give the highest priority to our transfer.
 
-[set DMA high priority](https://github.com/Essenceia/blake2_asic/blob/0d474b0120cb0790c1552ccaddbd470c5be629f7/firmware/data_rd_utils.c#L16) 
+[link to code: set DMA high priority](https://github.com/Essenceia/blake2_asic/blob/0d474b0120cb0790c1552ccaddbd470c5be629f7/firmware/data_rd_utils.c#L16) 
 
 # Implementation
 
 
 As this article is already getting quite long (congratulations for sticking around), I won't delve too deeply into the implementation issues encountered while iterating on this design. I will simply say that implementation runs were performed regularly in parallel with the design work to quickly identify and refine timing while keeping area utilization in check.
+
+{{< figure
+    src="layout.png"
+    alt="Implementation result"
+    caption="ASIC implementation render"
+>}}
 
 When it comes to violations, antenna issues were the primary challenge because this ASIC targets Sky130A and the chosen layout was a very long 4×2 tile rectangle. Some of these wires were so long they practically had multiple postal codes. This is also why, when looking at the cell frequency table, readers can see the scars of battle in the form of the design being covered in diodes. These were used to offer discharge paths for charges accumulated during fabrication:
 
@@ -570,5 +608,8 @@ Even if the accelerator itself was “relatively” simple (a sort of blinky pro
 
 It did cost a lot of time and energy but it was definitely worth the shot and I would recommend the interested designer to have a try at it, given how much they will learn from it.
 
-<My reward for my final all nighter spent at fixing the implementation and making the emulator work.>
-
+{{< figure
+    src="waffles.jpg"
+    caption="My reward for my final all nighter spent at fixing the implementation and making the emulator work."
+    alt="My reward for my final all nighter spent at fixing the implementation and making the emulator work."
+>}}
