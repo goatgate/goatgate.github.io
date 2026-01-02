@@ -13,7 +13,7 @@ title = "Tales on the wire"
   # description = "My awesome website"
   # copyright = "Copy, _right?_ :thinking_face:"
 
-[author]
+[params.author]
    name = "Julia Desmazes"
 #   image = "img/blowfish_logo.png"
    headline = "RTL designer, building one block at a time"

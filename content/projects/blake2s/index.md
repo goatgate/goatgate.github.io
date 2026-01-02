@@ -1,4 +1,11 @@
-
+---
+title: "BLAKE2s Hashing Accelerator: A Solo Tapeout Journey"
+date: 2026-01-02
+description: "Taping out a fully featured Blake2s hashing accelerator targetting the 130nm SKY130A process."
+summary: "Blake2s ASIC implementation targetting the SKY130A process, tapedout with TinyTapeout."
+tags: ["asic", "sky130", "130nm", "rtl", "verilog", "cryptography", "blake2"]
+draft: false
+---
 ## My Latest Bad Idea
 
 Some people have hobbies, I find that cryptographic hashing accelerators are fascinating engineering challenges. Please hear me out. Each algorithm offers slightly different design tradeoffs, presents unique opportunities for optimization, is easy to validate, and each serves as a perfect excuse to voluntarily subject yourself to a Friday evening of debugging hash result mismatches.
