@@ -489,6 +489,12 @@ To understand why these empty cycles occur, we need to take a step back and unde
 
 Internally, each SM is equipped with very little storage, as memory being expensive in terms of area is a universal struggle. Each SM can be configured to have up to 8x32 bits of FIFO storage, with up to 32 aligned bits accessible each cycle and a 32-bit wide output buffer. To write to a pin, we must first pull a full 32-bit FIFO entry into the output buffer, and only then can we write the contents of the output buffer to the pins. The PIO hardware allows us to configure the FIFO so that when the output buffer has been read to a trigger point, it automatically pulls the next available entry from the FIFO. Issues arise when the FIFO becomes empty and needs to be refilled.
 
+{{< figure
+    src="osr.png"
+    caption="Output Shift Register (OSR), source: RP2040 Datasheet"
+    alt="Output Shift Register (OSR), source: RP2040 Datasheet"
+>}}
+ 
 {{< alert "circle-info" >}}
 The SM can only write to consecutive pins. To simplify wiring during emulation, this resulted in a 32-bit wide write, meaning a full FIFO entry was consumed per write. When using the Tiny Tapeout dev board, this can be optimized down to a 16-bit wide write, consuming a FIFO entry only every two writes.
 {{< /alert  >}}
@@ -527,6 +533,12 @@ As such, our parallel protocol requires the ASIC to assert the `hash_valid_o` si
 
 The hash results are of variable length, with a maximum length of 32 bytes. Receiving and reading the incoming hash result from the ASIC to the MCU memory is handled by a separate PIO SM (State Machine). This SM has its own 8×32 bits deep RX FIFO in which incoming data can be buffered. However, this RX FIFO is, yet again, too small to capture the full hash on its own, even if we only read 8 bits (from 8 pins) per cycle as we do on the emulator.
 
+{{< figure
+    src="isr.png"
+    caption="Input Shift Register (ISR), source: RP2040 Datasheet"
+    alt="Input Shift Register (ISR), source: RP2040 Datasheet"
+>}}
+ 
 {{< alert "lightbulb" >}}
 Unfortunately, because of how the final Tiny Tapeout dev board MCU is wired, with `ui_in[0-3]` placed in the middle of the `uo_out` pins, we face a mapping challenge. Since the PIO hardware can only read and write consecutive pins, and we want our data to be aligned on 32-bit boundaries, the final version will require reading 16 bits each cycle to capture the necessary 8 bits.
 {{< /alert >}}
@@ -540,6 +552,7 @@ Unfortunately, because of how the final Tiny Tapeout dev board MCU is wired, wit
 Here again, the Cortex-M0+ cores are too slow for our use case, so we rely on the DMA to copy the contents of the full FIFO entries to memory. Unlike the data streaming example, where we could tolerate gaps, here we must guarantee that no bubbles are introduced in the read sequence. In this context, bubbles would occur if the RX FIFO and the input buffer were full, causing the pin read to stall until space became available, and dropping all incoming bytes in the meantime.\
 The RX FIFO could reach capacity if our RX to memory DMA transfer were stalled by another peripheral using the shared internal hardware resources, such as a concurrent block data DMA transfer to a different state machine on the same PIO.
 
+
 To prevent this scenario, we configure the DMA engine to give the highest priority to our transfer.
 
 [link to code: set DMA high priority](https://github.com/Essenceia/blake2_asic/blob/0d474b0120cb0790c1552ccaddbd470c5be629f7/firmware/data_rd_utils.c#L16) 
@@ -550,7 +563,7 @@ To prevent this scenario, we configure the DMA engine to give the highest priori
 As this article is already getting quite long (congratulations for sticking around), I won't delve too deeply into the implementation issues encountered while iterating on this design. I will simply say that implementation runs were performed regularly in parallel with the design work to quickly identify and refine timing while keeping area utilization in check.
 
 {{< figure
-    src="layout.png"
+    src="feature_layout.png"
     alt="Implementation result"
     caption="ASIC implementation render"
 >}}
@@ -610,6 +623,6 @@ It did cost a lot of time and energy but it was definitely worth the shot and I 
 
 {{< figure
     src="waffles.jpg"
-    caption=Celebration of the tapeout submission."
+    caption="Celebration of the tapeout submission."
     alt="My reward for tapeout submission."
 >}}
