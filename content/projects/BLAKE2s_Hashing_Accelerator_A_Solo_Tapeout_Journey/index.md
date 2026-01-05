@@ -129,7 +129,7 @@ For this tape-out, we will be using the "classic" variant of the LibreLane flow.
 
 ## Sky130A PDK 
 
-The **PDK**, or Product Design Kit, is an integral part of making a digital ASIC design, as it contains the cell libraries and their characterizations for target operating parameters (temperature/voltage). It is literally the foundation upon which a digital design is built. Because of their nature, PDKs are foundry/process specific, each PDK is tailored by nature to a foundry/process and is typically designed by or in close cooperation with said foundry.
+The **PDK**, or Process Design Kit, is an integral part of making a digital ASIC design, as it contains the cell libraries and their characterizations for target operating parameters (temperature/voltage). It is literally the foundation upon which a digital design is built. Because of their nature, PDKs are foundry/process specific, each PDK is tailored by nature to a foundry/process and is typically designed by or in close cooperation with said foundry.
 
 Typically, getting access to a PDK requires at least signing an NDA with a foundry and isn't accessible to just anyone, so when Google partnered with the US-based SkyWater fab to release an open-source PDK for their 130nm process, it was very very significant. Google has additionally partnered with Global Foundries and released the gf180 for their 180nm MCU process. These open-source PDKs have truly changed what was possible for open-source silicon.
 
