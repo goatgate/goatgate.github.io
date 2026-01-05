@@ -5,7 +5,9 @@ description: "Taping out a fully featured Blake2s hashing accelerator targetting
 summary: "Blake2s ASIC implementation targetting the SKY130A process, tapedout with TinyTapeout."
 tags: ["asic", "sky130", "130nm", "rtl", "verilog", "cryptography", "blake2"]
 draft: false
+showTableOfContents: true
 ---
+
 # My Latest Bad Idea
 
 Some people have hobbies, I find that cryptographic hashing accelerators are fascinating engineering challenges. Please hear me out. \
