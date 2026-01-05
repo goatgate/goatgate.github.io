@@ -312,7 +312,7 @@ Given that the Blake2b variant requires twice the on-chip storage compared to th
 
 ### I/O Bottleneck 
 
-The objective was to tape out this design as part of the `sky2b` TinyTapeout shuttle. As such, this design will be integrated as a pre-hardened macro block into the larger chip. Like most blocks, it will communicate with the pins through a shared mux and will not own any pins on its own.
+The objective was to tape out this design as part of the `sky25b` TinyTapeout shuttle. As such, this design will be integrated as a pre-hardened macro block into the larger chip. Like most blocks, it will communicate with the pins through a shared mux and will not own any pins on its own.
 
 {{< figure
     src="chip.svg"
