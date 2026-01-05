@@ -21,7 +21,9 @@ What makes Blake2 particularly interesting is that it was originally designed an
 
 This article will mostly focus on the why behind the design choices and not an in-depth presentation of the design itself. The full codebase can be found here : 
 
-{{< github repo="Essenceia/blake2_asic" showThumbnail=true >}}
+{{< github repo="Essenceia/blake2_asic" showThumbnail=false >}}
+
+For readers more interested in using this accelerator, [the datasheet can be found here](https://github.com/Essenceia/blake2_asic/blob/main/docs/info.md)
 
 ## Accessible, Not Easy
 The goal of this project was to independently tape out my first ASIC outside of any organized team. \
@@ -312,8 +314,8 @@ The objective was to tape out this design as part of the `sky2b` TinyTapeout shu
 
 {{< figure
     src="chip.svg"
-    caption="Tinytapeout chip"
-    alt="Tinytapeout chip"
+    caption="TinyTapeout chip (I recommend switching the page to light mode for better readability of the pin names) "
+    alt="TinyTapeout chip"
 >}}
 
 In addition to a reset and clock signal, each block is given access to the following I/O:
@@ -334,6 +336,23 @@ Secondly, because of a weak driver on the output path (Design to MCU) leading to
 #### Putting it Together
 
 Given that additional metadata must be transmitted alongside the input data (and setting aside a few bits for handshaking with the MCU) we are left with only 8 bits in both the input and output directions for data transfer. Because each hashing round of the mixing function is performed on an entire block's data, we must accumulate all 64 bytes of the next block before computation can begin.
+
+{{< alert "lightbulb" >}}
+This article is focused on explaining the **rationale behind the design decisions** rather than being a datasheet for the design itself. \
+So, just for context here is the final accelerator's pinout:
+
+| ui (Inputs)       | uo (Outputs)      | uio (Bidirectional)       |
+| ----------------- | ----------------- | ------------------------- |
+| ui[0] = data_i[0] | uo[0] = hash_o[0] | uio[0] = valid_i[0]       |
+| ui[1] = data_i[1] | uo[1] = hash_o[1] | uio[1] = cmd_i[0]         |
+| ui[2] = data_i[2] | uo[2] = hash_o[2] | uio[2] = cmd_i[1]         |
+| ui[3] = data_i[3] | uo[3] = hash_o[3] | uio[3] = ready_o          |
+| ui[4] = data_i[4] | uo[4] = hash_o[4] | uio[4] = output_mode_i[0] |
+| ui[5] = data_i[5] | uo[5] = hash_o[5] | uio[5] = output_mode_i[1] |
+| ui[6] = data_i[6] | uo[6] = hash_o[6] | uio[6] =                  |
+| ui[7] = data_i[7] | uo[7] = hash_o[7] | uio[7] = hash_valid_o[7]  |
+{{< /alert >}}
+
 
 Additionally, due to area limitations, we cannot afford the extra 64 bytes of memory required to pipeline this accumulation in parallel with the previous block’s computation. As such, the computation is stalled while the next block’s data is being received.
 
