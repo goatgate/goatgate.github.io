@@ -1,8 +1,8 @@
 ---
 title: "BLAKE2s Hashing Accelerator: A Solo Tapeout Journey"
 date: 2025-12-30
-description: "Taping out a fully featured Blake2s hashing accelerator targetting the 130nm SKY130A process."
-summary: "Blake2s ASIC implementation targetting the SKY130A process, tapedout with TinyTapeout."
+description: "Taping out a fully featured BLAKE2s hashing accelerator targetting the 130nm SKY130A process."
+summary: "BLAKE2s ASIC implementation targetting the SKY130A process, tapedout with Tiny Tapeout."
 tags: ["asic", "sky130", "130nm", "rtl", "verilog", "cryptography", "blake2"]
 draft: false
 showTableOfContents: true
@@ -13,13 +13,13 @@ showTableOfContents: true
 Some people have hobbies, I find that cryptographic hashing accelerators are fascinating engineering challenges. Please hear me out. \
 Each algorithm offers slightly different design tradeoffs, presents unique opportunities for optimization, is easy to validate, and each serves as a perfect excuse to voluntarily subject yourself to a Friday evening of debugging hash result mismatches.
 
-Now that the stage is set, let me introduce today's star: Blake2. Blake2 is a family of cryptographic hash functions that takes arbitrary amounts of data and compresses it down to a variable-sized digest (hash). This hash is then used as a digital signature for message authentication codes and integrity protection mechanisms.
+Now that the stage is set, let me introduce today's star: BLAKE2. BLAKE2 is a family of cryptographic hash functions that takes arbitrary amounts of data and compresses it down to a variable-sized digest (hash). This hash is then used as a digital signature for message authentication codes and integrity protection mechanisms.
 
-The Blake2 family comes in two primary variants:
-- Blake2b, designed for 64-bit platforms
-- Blake2s, the 32-bit variant
+The BLAKE2 family comes in two primary variants:
+- BLAKE2b, designed for 64-bit platforms
+- BLAKE2s, the 32-bit variant
 
-What makes Blake2 particularly interesting is that it was originally designed and optimized for high software performance. It's fundamentally a software-first algorithm, in contrast to AES, which maps so clearly to hardware that your architecture practically writes itself as you read the spec.
+What makes BLAKE2 particularly interesting is that it was originally designed and optimized for high software performance. It's fundamentally a software-first algorithm, in contrast to AES, which maps so clearly to hardware that your architecture practically writes itself as you read the spec.
 
 This article will mostly focus on the why behind the design choices and not an in-depth presentation of the design itself. The full codebase can be found here : 
 
@@ -29,7 +29,7 @@ For readers more interested in using this accelerator, [the datasheet can be fou
 
 ## Accessible, Not Easy
 The goal of this project was to independently tape out my first ASIC outside of any organized team. \
-This involves, solo: designing, validating, and successfully taping out a fully-featured Blake2s hashing accelerator on the SkyWater 130nm process through the Tiny Tapeout shuttle program.
+This involves, solo: designing, validating, and successfully taping out a fully-featured BLAKE2s hashing accelerator on the SkyWater 130nm process through the Tiny Tapeout shuttle program.
 
 A few years ago, independent ASIC tape-out would have been a pipe dream unless you had successfully sold your startup to Meta or grew up in a family whose garage included a private jet.
 
@@ -135,40 +135,47 @@ Typically, getting access to a PDK requires at least signing an NDA with a found
 
 For this tape-out, I will be targeting a sky130A process. This is a classic CMOS process without the magnetic RAM that differentiates it from the sky130B process. More specifically, for this tape-out, I will be using the high-density cell library `hd`, which occupies a 0.46 x 2.72µm typical site, equivalent to 9 met1 tracks. As for the target typical operating parameters, it will be a temperature of 25C for a voltage of 3.3V.
 
-## TinyTapeout
+## Tiny Tapeout
 
-TinyTapeout is an open shuttle program where multiple projects are pulled together and taped out as part of the same chip. Participant projects are hardened as macro blocks, the size of which scales with the amount of purchased tiles. As such, projects range from the very tiny counter to the much larger SoC. These projects are multiplexed together behind a shared mux, connected to a shared bus, and use common I/O (with a few exceptions).
+Tiny Tapeout is an open shuttle program where multiple projects are pulled together and taped out as part of the same chip. Participant projects are hardened as macro blocks, the size of which scales with the amount of purchased tiles. As such, projects range from the very tiny counter to the much larger SoC. These projects are multiplexed together behind a shared mux, connected to a shared bus, and use common I/O (with a few exceptions).
+
+{{< alert "heart" >}}
+Interested in learning more about Tiny Tapeout or when the next shuttle is closing?
+Check out the official website: [https://tinytapeout.com/](https://tinytapeout.com/)
+{{< /alert >}} 
+
 
 {{< figure
     src="full_chip.png"
-    caption="Full sky25b shuttle TinyTapeout chip render."
-    alt="Full sky25b shuttle TinyTapeout chip render. "
+    caption="Full sky25b shuttle Tiny Tapeout chip render."
+    alt="Full sky25b shuttle Tiny Tapeout chip render. "
 >}}
 
-The final chip users can configure which project they want to enable during operation and all other designs will be power gated. The final chip is sold as part of a dev board, which contains both the TinyTapeout chip and is connected to an RP2040 MCU.
+The final chip users can configure which project they want to enable during operation and all other designs will be power gated. The final chip is sold as part of a dev board, which contains both the Tiny Tapeout chip and is connected to an RP2040 MCU.
+
 
 # Architecture
 
 As I said in the introduction, something that I find makes hashing algorithms particularly interesting to implement is how the same functionality can be designed so differently given different PPA (power, performance, area) targets. And in this project, there were a few external constraints which, because of their importance, have defined the architectural direction.
 
-## Blake2 algorithme 
+## BLAKE2 algorithme 
 {{< alert "circle-info" >}}
-Readers already intimately familiar with the Blake2 hashing function internals can skip this section.
+Readers already intimately familiar with the BLAKE2 hashing function internals can skip this section.
 {{< /alert >}}
 
-Before going deeper into our discussion of the architecture, in order to gain a better understanding of how our environment has shaped our architectural decisions, I would like to take a moment to delve in depth into the Blake2 algorithm to gain a better understanding of the problem itself.
+Before going deeper into our discussion of the architecture, in order to gain a better understanding of how our environment has shaped our architectural decisions, I would like to take a moment to delve in depth into the BLAKE2 algorithm to gain a better understanding of the problem itself.
 
-As stated in the introduction, Blake2 is a hashing function. Its objective is to take a large amount of data and produce a high-entropy, reproducible shorter digest of this data, called a hash. This hash can then be compared against an expected hash result to identify if the data has been corrupted or tampered with.
+As stated in the introduction, BLAKE2 is a hashing function. Its objective is to take a large amount of data and produce a high-entropy, reproducible shorter digest of this data, called a hash. This hash can then be compared against an expected hash result to identify if the data has been corrupted or tampered with.
 
-Internally, the Blake2 hashing function breaks down the incoming data to be hashed into blocks (b) and passes each block through a compression function, during which the data will go through a few rounds of a mixing function. During this, a per-block internal state is computed (v), and the block result (h) is then derived from this internal state. The final hash result is derived from h and returned as the result on the last block.
+Internally, the BLAKE2 hashing function breaks down the incoming data to be hashed into blocks (b) and passes each block through a compression function, during which the data will go through a few rounds of a mixing function. During this, a per-block internal state is computed (v), and the block result (h) is then derived from this internal state. The final hash result is derived from h and returned as the result on the last block.
 
-The size of the data, as well as the number of mixing rounds, varies with the Blake2 variant:
-- A block (b) is 64 bytes for Blake2s and 128 bytes for Blake2b
-- The mixing function has 10 rounds for Blake2s and 12 rounds for Blake2b
-- The mixing function internal state (v) size is 64 bytes for Blake2s and 128 bytes for Blake2b
-- The block result (h) size is 32 bytes for Blake2s and 64 bytes for Blake2b
+The size of the data, as well as the number of mixing rounds, varies with the BLAKE2 variant:
+- A block (b) is 64 bytes for BLAKE2s and 128 bytes for BLAKE2b
+- The mixing function has 10 rounds for BLAKE2s and 12 rounds for BLAKE2b
+- The mixing function internal state (v) size is 64 bytes for BLAKE2s and 128 bytes for BLAKE2b
+- The block result (h) size is 32 bytes for BLAKE2s and 64 bytes for BLAKE2b
 
-We can clearly see not only how Blake2b needs twice the storage requirement of Blake2s but also how large the memory footprint of Blake2, regardless of the variant is.
+We can clearly see not only how BLAKE2b needs twice the storage requirement of BLAKE2s but also how large the memory footprint of BLAKE2, regardless of the variant is.
 
 ### Pseudo code 
 
@@ -272,7 +279,7 @@ Projects come in a set of varying sizes, from the smallest and more common singl
 
 So just like in the semiconductor industry, I have one of the best motivations to optimize for area: money.
 
-Unfortunately, given the memory footprint intrinsic to the Blake2 algorithm, I had not chosen the most favorable project in the circumstance.
+Unfortunately, given the memory footprint intrinsic to the BLAKE2 algorithm, I had not chosen the most favorable project in the circumstance.
 
 
 #### Storage
@@ -307,17 +314,17 @@ There is currently no proven open-source SRAM for sky130. Although an experiment
 D-Flipflop cells, now my primary source of storage, each take up a lot of area.
 
 In a perfect universe, given the relatively massive amount of storage and the access pattern, storing data in SRAM would have been ideal. In practice, using flip-flops was my only feasible path.
-Given that the Blake2b variant requires twice the on-chip storage compared to the Blake2s version, this area constraint naturally guided the choice to implement the Blake2s variant.
+Given that the BLAKE2b variant requires twice the on-chip storage compared to the BLAKE2s version, this area constraint naturally guided the choice to implement the BLAKE2s variant.
 
 
 ### I/O Bottleneck 
 
-The objective was to tape out this design as part of the `sky25b` TinyTapeout shuttle. As such, this design will be integrated as a pre-hardened macro block into the larger chip. Like most blocks, it will communicate with the pins through a shared mux and will not own any pins on its own.
+The objective was to tape out this design as part of the `sky25b` Tiny Tapeout shuttle. As such, this design will be integrated as a pre-hardened macro block into the larger chip. Like most blocks, it will communicate with the pins through a shared mux and will not own any pins on its own.
 
 {{< figure
     src="chip.svg"
-    caption="TinyTapeout chip (I recommend switching the page to light mode for better readability of the pin names) "
-    alt="TinyTapeout chip"
+    caption="Tiny Tapeout chip (I recommend switching the page to light mode for better readability of the pin names) "
+    alt="Tiny Tapeout chip"
 >}}
 
 In addition to a reset and clock signal, each block is given access to the following I/O:
@@ -566,8 +573,8 @@ Unfortunately, because of how the final Tiny Tapeout dev board MCU is wired, wit
 
 {{< figure 
     src="pcb.png"
-    caption="RP2040 wiring on the TinyTapeout dev board."
-    alt="RP2040 wiring on the TinyTapeout dev board."
+    caption="RP2040 wiring on the Tiny Tapeout dev board."
+    alt="RP2040 wiring on the Tiny Tapeout dev board."
 >}}
 
 Here again, the Cortex-M0+ cores are too slow for our use case, so we rely on the DMA to copy the contents of the full FIFO entries to memory. Unlike the data streaming example, where we could tolerate gaps, here we must guarantee that no bubbles are introduced in the read sequence. In this context, bubbles would occur if the RX FIFO and the input buffer were full, causing the pin read to stall until space became available, and dropping all incoming bytes in the meantime.\
