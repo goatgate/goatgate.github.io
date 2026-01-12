@@ -10,8 +10,8 @@ matrix matrix multiplication on a 2x2 matrix using signed 8 bit integers.
 It has a maximum operating frequency of 50MHz and an effective max compute capability of 100 MMAC/s (Million Multiply and Accumulate Operations per second)
 or 200 MIOP/s (Million Integer Operations per second). 
 
-This most recent ASIC targets the Global Foundries 180nm process GF180 and was designed with Google's open source GF180-MCU PDK (Process Design Kit) 
-using the smaller, more energy efficient but slower 7 segment track standard cells. ( TODO hd cells ? )
+This most recent ASIC targets the Global Foundries 180nm process GF180, designed using Google's open source GF180-MCU PDK (Process Design Kit) 
+with the smaller, more energy efficient but slower 7 segment track standard cells. ( TODO hd cells ? )
 
 Once again, this tapeout is made possible by the Tiny Tapeout program and will be going out as part of the `gf0p2` (GF 0.2) experimental shuttle 
 submitted as part of the first wafer.space run. 
@@ -53,24 +53,16 @@ large designs being submitted.
 >}}
 >
 If the final chip is demmed sufficiently functional, the resulting ASICs along with the devnoard will be publically available 
-for purchase on the [Tiny Tapeout store](TODO link),
-
- going out as part of a TinyTapeout shuttle <3
-This homegrown AI inference accelerator features a 2x2 systolic matrix multiplier on GF180 supporting multiply and accumulate operations on int8 data alongside a design for test infrastructure to help debug both usage and diagnose design issues in silicon.
-
-This MAC accelerator operates at up to 50 MHz and is capable of reaching up to 100 MMAC/s or 200 MIOPS/s.
+for purchase on the [Tiny Tapeout store](https://store.tinytapeout.com/),
 
 
 ## The Plan
 
-In this article I will be going in depth on the advantages of the systolic architecture from a performance and power efficiency standpoint, optimizing  booth radix-4 for integer multiplications, touching on everyone's favorite topic of building an in silicon debug infrastructure, and of course, the obligatorily geeking off on why the OSS design flow is awsome. 
+In this article I will be going in depth on the advantages of the systolic architecture from a performance and power efficiency standpoint, optimizing  booth radix-4 for integer multiplications, touching on everyone's favorite topic of building an in silicon debug infrastructure, and of course, the obligatory geeking out on why the OSS design flow is awesome. 
 
-(Because I know everyone is secretly here to get there to read up on in silicon observability and designing JTAG TAPs.) 
+(Because I know everyone is secretly here to read up on in silicon observability and designing JTAG TAPs.) 
 
-The goal of this article isn't to serve as a ([datasheet (link here for the datasheet)](https://github.com/Essenceia/Systolic_MAC_with_DFT/blob/main/docs/info.md) for this design but rather to discuss what I personally judge to be the more interesting design considerations and optimizations that went into this ASIC.
+The goal of this article isn't to serve as a datashee [(link here for the datasheet)](https://github.com/Essenceia/Systolic_MAC_with_DFT/blob/main/docs/info.md) for this design but rather to discuss what I personally judge to be the more interesting design considerations and optimizations that went into this ASIC.
 
 
 
-{{< alert "info-cirle" >}}
-Accelerator data
-{{< /alter >}}
