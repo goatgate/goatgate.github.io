@@ -24,15 +24,13 @@ And if you want to go the extra mile and own the full chips check out [`wafer.sp
 
 ### Experimental shuttle 
 
-Tiny Tapeout experimental shuttles are used as testing grounds for fabs and processes, they are used to iron out
-and issues before opening the classic shuttles. Participation to these experimental shuttles is generally reserved to people having
-previously participated in a Tiny Tapeout tapeout, thus, my hashing accelerator submitted as part of the [`sky25b` shuttle](TODO)
-allowed me to participate. 
+Tiny Tapeout experimental shuttles are used as testing grounds for new nodes and flows and are used to iron out issues before opening up the public shuttles. \
+Participation in these experimental shuttles is commonly reserved to contributors having
+previously submitted to a Tiny Tapeout tapeout. Thus, [my hashing accelerator](https://essenceia.github.io/projects/blake2s_hashing_accelerator_a_solo_tapeout_journey/) submitted as part of the `sky25b` shuttle allowed me eligibility. 
 
-This limitation was imposed to help select for more experienced designers as these experimental shuttles 
-are used as a the testing ground for new design flows and as the final chip doesn't feature all the inter design issolation as the 
-classic flow. \
-For example, in the classic flow, each submitted design macro was individually power gated, and only
+This limitation was imposed to help select for more experienced designers as these experimental shuttles are used as testing grounds and the final chip doesn't feature all the inter design isolation as in a public tapeout.
+
+For example, in the public `sky25b` tapeout, each submitted design macro was individually power gated, and only
 powered when selectively enabled. In the experimental shuttle, each designer is trusted to gate there own design, 
 if not power or clock gated, at least to reduce dynamic power consumption when not selected. \
 As another example, in classic flows, the maximum I/O opperating characteristics are well understood (eg: for SKY130 we have 66 MHz input, 33 MHz output and 2 ns maximum inter-pin skew),
@@ -41,19 +39,18 @@ In my design, for the AI acclerator part, I assumed both the input and output pa
 it is quite possible this assumption might turn out to be too optimistic. 
 
 As such, these experimental shuttle chips have many additional risk that the chip itself, and not 
-individual designs, might not be fully functional. \
-Knowing this limitation, the Tiny Tapeout program is very generously making submissions to these shuttles free of charge. 
-In parctice, this means that area is effectively free explaining the higher ratio of very 
-large designs being submitted. 
+individual designs, might not be fully functional. 
+
+Knowing these limitations, the Tiny Tapeout program is very generously making submissions to these shuttles free of charge. \In practice, this makes area effectively free, explaining the higher occurrence of very large designs being submitted.
 
 {{< figure 
     src="tt_gf02.png"
-    caption="Full GDS render of the GF 0.2 Tiny Tapeout chip"
+    caption="Full GDS render of the GF 0.2 Tiny Tapeout chip, with a lot of large multi-tile designs."
     alt="chip render"
 >}}
 >
 If the final chip is demmed sufficiently functional, the resulting ASICs along with the devnoard will be publically available 
-for purchase on the [Tiny Tapeout store](https://store.tinytapeout.com/),
+for purchase at the [Tiny Tapeout store](https://store.tinytapeout.com/).
 
 
 ## The Plan
