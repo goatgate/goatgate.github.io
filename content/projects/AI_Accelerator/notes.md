@@ -1,18 +1,28 @@
 title : Homeground AI interfence accelerator
 
+
+
 ## Design 
 
-This homegrown AI interference accelerator features a tiny systollic array capable of performing a 
+This homegrown AI interference accelerator features a tiny systolic array capable of performing a 
 matrix matrix multiplication on a 2x2 matrix using signed 8 bit integers. 
 
-It has a maximum operating frequency of 50MHz and and effective max compute capability of 100 MMAC/s (Million Multiply and Accumulate Operations per second)
+It has a maximum operating frequency of 50MHz and an effective max compute capability of 100 MMAC/s (Million Multiply and Accumulate Operations per second)
 or 200 MIOP/s (Million Integer Operations per second). 
 
-This most recent ASIC targets the Global Foundery 180nm process GF180 and was designed with Google's open source GF180-MCU PDK (Process Design Kit) 
-using the smaller, more engergy efficient but slower 7 segment track standard cells. ( TODO hd cells ? )
+This most recent ASIC targets the Global Foundries 180nm process GF180 and was designed with Google's open source GF180-MCU PDK (Process Design Kit) 
+using the smaller, more energy efficient but slower 7 segment track standard cells. ( TODO hd cells ? )
 
-Once again, this tapeout is made possible by the Tiny Tapeout program and will be going out as part of the `gf02` experimental shuttle 
-submitted as part of the first waffer.space run. 
+Once again, this tapeout is made possible by the Tiny Tapeout program and will be going out as part of the `gf0p2` (GF 0.2) experimental shuttle 
+submitted as part of the first wafer.space run. 
+
+{{< alter "heart" >}} 
+You can learn more about the awesome Tiny Tapeout shuttle programs at the official website: [https://tinytapeout.com/](https://tinytapeout.com/)
+
+And if you want to go the extra mile and own the full chips check out [`wafer.space` at https://wafer.space/](https://wafer.space/) where you can get 1k ~20mm2 raw dies for as low as 7k USD.
+{{< /alter >}}
+
+### Experimental shuttle 
 
 Tiny Tapeout experimental shuttles are used as testing grounds for fabs and processes, they are used to iron out
 and issues before opening the classic shuttles. Participation to these experimental shuttles is generally reserved to people having
@@ -36,6 +46,12 @@ Knowing this limitation, the Tiny Tapeout program is very generously making subm
 In parctice, this means that area is effectively free explaining the higher ratio of very 
 large designs being submitted. 
 
+{{< figure 
+    src="tt_gf02.png"
+    caption="Full GDS render of the GF 0.2 Tiny Tapeout chip"
+    alt="chip render"
+>}}
+>
 If the final chip is demmed sufficiently functional, the resulting ASICs along with the devnoard will be publically available 
 for purchase on the [Tiny Tapeout store](TODO link),
 
@@ -47,8 +63,12 @@ This MAC accelerator operates at up to 50 MHz and is capable of reaching up to 1
 
 ## The Plan
 
-Like allways, the plan for this article isn't to be a datasheet for this accelerator (you can find the [datasheet here](TODO github link)), but 
-to present the design principals and some of the more intresting opptimization that when into this homeground AI inference accelerator. 
+In this article I will be going in depth on the advantages of the systolic architecture from a performance and power efficiency standpoint, optimizing  booth radix-4 for integer multiplications, touching on everyone's favorite topic of building an in silicon debug infrastructure, and of course, the obligatorily geeking off on why the OSS design flow is awsome. 
+
+(Because I know everyone is secretly here to get there to read up on in silicon observability and designing JTAG TAPs.) 
+
+The goal of this article isn't to serve as a ([datasheet (link here for the datasheet)](https://github.com/Essenceia/Systolic_MAC_with_DFT/blob/main/docs/info.md) for this design but rather to discuss what I personally judge to be the more interesting design considerations and optimizations that went into this ASIC.
+
 
 
 {{< alert "info-cirle" >}}
