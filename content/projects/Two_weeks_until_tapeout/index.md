@@ -211,7 +211,7 @@ Since this ASIC is once again taping out as part of a Tiny Tapeout shuttle, it h
 	alt="chip schematic"  
 >}}
 
-This limitations come in two flavors:
+This limitations comes in two flavors:
 
 1. Pin count: Eight input pins, eight output pins, and eight configurable I/O pins, limiting my parallel buses in and out of the accelerator.  
 2. Maximum operating frequency: Unlike with the well-trodden path that was the public Skywater 130nm shuttle tapeout, for this experimental shuttle the maximum switching frequency of these pins hasn’t been characterized yet. And since I haven't yet figured out how to do this characterization using a simulator myself, I've hand-wavingly assumed that both the input and output directions have a sustainable switching frequency of 50 MHz, and have sized the path timings around that assumption.
@@ -291,7 +291,8 @@ $$
 
 Given that the weights have high temporal and spatial locality, meaning the same set of weights can be reused over multiple unique input data matrices, in order to save on bandwidth, the choice was made to store an 8 bit weight in place inside of each unit. 
 
-A separate control sequence allows the user to load a new set of weights inside each of the units. The weight packet is sent over four consecutive cycles using the same data input interface as the input matrix. 
+A separate control sequence allows the user to load a new set of weights inside each of the units. 
+The weight packet is sent over four consecutive cycles using the same input interface as the data matrix. 
 
 
 
@@ -307,7 +308,7 @@ An added bonus is that this animation is also of a 2×2 systolic array, such tha
 
 {{< figure
     src="systolic_array.gif"
-    caption="Credit : Pan, William. (2025). Systolic Array Simulator. GitHub Repository.\[https://github.com/wp4032/william-pan.com](https://github.com/wp4032/william-pan.com)"
+    caption="Credit : Pan, William. (2025). Systolic Array Simulator. GitHub Repository.[https://github.com/wp4032/william-pan.com](https://github.com/wp4032/william-pan.com)"
     alt=""
 >}}
 
@@ -332,10 +333,11 @@ Similarly on the output side, when the accelerator produces two 8-bit results pe
 ### Validation
 
 Validation was an extremely important step for this systolic array, particularly for validating my custom implementation of the Booth Radix-4 multiplication.   
+
 Once again, I used Cocotb as the abstracting layer allowing me to interface with multiple different simulators. Namely, icarus verilog for my standard verification and CVC for the post implementation timing annotated netlist.   
 This validation followed my standard approach of providing a set of input data matrices and weights over the standard accelerators interfaces and comparing the produced results to the expected values. 
 
-Given the nature of the problem. I made extensive use of randomization in order to get better testing coverage and attempt to hit corner cases that would not have been revealed using a directed approach. This randomization randomized both the values of the inputs weight and data, and also the timings with which this incoming data was fed over the parallel bus to the accelerator.
+Given the nature of the problem, I made extensive use of randomization in order to get better testing coverage and attempt to hit corner cases that would not have been revealed using a directed approach. This randomization randomized both the values of the inputs weight and data, and also the timings with which this incoming data was fed over the parallel bus to the accelerator.
 
 ### Firmware 
 
@@ -352,12 +354,12 @@ Although this will necessitate to re-adapt parts of the firmware for the new dev
 The second major component of this design and admittedly the actual principle piece of this ASIC is the JTAG TAP. 
 
 As stated earlier when my ASIC comes back as a glorified paperweight I will suddenly have a strong and immediate need for some 
-kind of hardware block providing some in silicon observability. 
+kind of hardware block providing some in-silicon observability. 
 
 This is absolutely crucial, as it isn't a question of if but when one of my ASIC will have hardware issues.   
 And, when that day comes, not having a view of the internal behavior will only make it that much more painful to identify the root issue in order to fix it for the upcoming generation.
 
-As such, this TAP is actually a part of my larger efforts to help produce a set of DFT (Design for Test) proven designs that I can integrate into all of my future ASICs. As such, I have quite an incentive to have these designs proven early.
+As such, this TAP is actually a part of my larger efforts to help produce a set of DFT (Design for Test) proven IP that I can integrate into all of my future ASICs. As such, I have quite an incentive to have these designs proven early.
 
 JTAG was chosen as it is a very common debug protocol. Not only is it well-defined but has good off-the-shelf support, both on the hardware (debug probes) and software side.
 
@@ -376,13 +378,14 @@ Custom instructions :
 
 - `USER_REG`, opcode `0x3`, custom instruction used to probe the internal registers
 
-The systolic array is quite a deep structure in the sense that the data is directly reused as it is recirculated within the systolic array. 
+The systolic array is quite a deep structure in the sense that the data is directly reused as it is recirculated within the
+array. 
 
 As such, it is very easy to lose track of what the internal state is, having only the input and output observable to the user. 
 Although this might stay manageable with a 2 x 2 array.
 As the structure grows larger, this will start to become more and more of an issue. 
 
-In order to help address this future issue, I added the custom `USER_REG` JTAG 
+In order to help address this future pain point, I added the custom `USER_REG` JTAG 
 instruction to read the current state of a target compute units internal registers. 
 
 [Link to the datasheet of the `USER_REG` instruction.](https://github.com/Essenceia/Systolic_MAC_with_DFT/tree/main?tab=readme-ov-file#user_reg)
@@ -529,10 +532,10 @@ set_clock_groups -asynchronous -group $clock_port -group $jtag_clock_port
 ```
 
 Because the official JTAG spec lives behind the impregnable IEEE paywall, a castle in which I am not permitted
-to set foot, the result of me not having payed its lord my dues, the verification of the JTAG TAP was actually quite interesting.
+to set foot, the result of not having payed its lord my dues, the verification of the JTAG TAP was actually quite interesting.
 
 Since JTAG is such a common protocol, its easy to find free resources online to build a good mental model of the internal 
-JTAG FSM and JTAG TAP structure. 
+FSM and TAP structure. 
 My initial implementation and test bench was derived from this best effort understanding.  
 As such emulation actually became a critical step for validating this JTAG TAP.
 
@@ -552,7 +555,7 @@ Then came the matter of supporting my custom TAP's unholy instructions.
 
 Luckily for me, OpenOCD allows you to finetune its behavior, through custom TCL scripts  (did I mention I have PTSD and now love TCL?). 
 
-Thanks to already having gone through the pain of learning to create custom OpenOCD scripts during my [Alibaba accelerator salvage project](https://essenceia.github.io/projects/alibaba_cloud_fpga/)), this was a breeze.
+Thanks to already having gone through the pain of learning to create custom OpenOCD scripts during my [Alibaba accelerator salvage project](https://essenceia.github.io/projects/alibaba_cloud_fpga/), this was a breeze.
  
 These scripts allowed me to bring up my custom TAP and add support for my own godforsaken instructions.
 
