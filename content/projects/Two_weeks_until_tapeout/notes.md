@@ -16,11 +16,11 @@ with the smaller, more energy efficient but slower 7 segment track standard cell
 Once again, this tapeout is made possible by the Tiny Tapeout program and will be going out as part of the `gf0p2` (GF 0.2) experimental shuttle 
 submitted as part of the first wafer.space run. 
 
-{{< alter "heart" >}} 
+{{< alert "heart" >}} 
 You can learn more about the awesome Tiny Tapeout shuttle programs at the official website: [https://tinytapeout.com/](https://tinytapeout.com/)
 
 And if you want to go the extra mile and own the full chips check out [`wafer.space` at https://wafer.space/](https://wafer.space/) where you can get 1k ~20mm2 raw dies for as low as 7k USD.
-{{< /alter >}}
+{{< /alert >}}
 
 ### Experimental shuttle 
 
