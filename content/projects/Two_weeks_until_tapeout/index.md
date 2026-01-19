@@ -528,31 +528,36 @@ if { [info exists ::env(OPENLANE_SDC_IDEAL_CLOCKS)] && $::env(OPENLANE_SDC_IDEAL
 set_clock_groups -asynchronous -group $clock_port -group $jtag_clock_port
 ```
 
-Because the official IEEE JTAG spec lives behind impregnable IEEE paywall, and I have not paid my dues, the verification of the JTAG TAP was actually quite interesting.
+Because the official JTAG spec lives behind the impregnable IEEE paywall, a castle in which I am not permitted
+to set foot, the result of me not having payed its lord my dues, the verification of the JTAG TAP was actually quite interesting.
 
-Since JTAG is such a common protocol, it is easy to find free resources online that get you a good mental model of the internal JTAG FSM and JTAG TAP structure. My initial implementation and test bench was derived from this best effort understanding.  
+Since JTAG is such a common protocol, its easy to find free resources online to build a good mental model of the internal 
+JTAG FSM and JTAG TAP structure. 
+My initial implementation and test bench was derived from this best effort understanding.  
 As such emulation actually became a critical step for validating this JTAG TAP.
 
 Recall how earlier I mentioned that JTAG was a well-supported protocol with good off-the-shelf support on the software side?  
 Did I mention OpenOCD has great support for JTAG?
 
-If I wasn't gonna get access to the official spec on how JTAG is expected to behave, plan B was to let my implementation be guided by how OpenOCD expected JTAG to behave. 
+If I wasn't going to get access to the official spec on how JTAG is expected to behave, plan B was to let my implementation be guided by how OpenOCD expected JTAG to behave. 
 
-To the purists clutching their pearls flabbergasted by the idea of not implementing the spec: I’m not sorry. But if you do have the official JTAG spec here is my [email](mailto:julia.desmazes@gmail.com).  
+To the purists clutching their pearls flabbergasted by the idea of not implementing per the spec: I’m not sorry. 
+But if you do have the official spec here is my [email](mailto:julia.desmazes@gmail.com).  
 
 In practice, whenever OpenOCD flagged my JTAG behavior as problematic, I assumed that my implementation was at fault. And trust me, there were issues. 
 
 I called this "Designed By SupportTM".
 
-Then came the matter of supporting my custom JTAG TAP and its unholy instructions. 
+Then came the matter of supporting my custom TAP's unholy instructions. 
 
-Luckily for me, the OpenOCD allows you to finetune its behavior, through custom TCL scripts  (did I mention I have PTSD and now love TCL?). 
+Luckily for me, OpenOCD allows you to finetune its behavior, through custom TCL scripts  (did I mention I have PTSD and now love TCL?). 
 
-Luckily, having already gone through the pain of learning to create custom OpenOCD scripts during my [Alibaba accelerator salvage project](https://essenceia.github.io/projects/alibaba_cloud_fpga/)), this was a breeze.
+Thanks to already having gone through the pain of learning to create custom OpenOCD scripts during my [Alibaba accelerator salvage project](https://essenceia.github.io/projects/alibaba_cloud_fpga/)), this was a breeze.
  
-These custom scripts allowed me to bring up my custom JTAG TAP and even allow me to add support for my own custom instructions.
+These scripts allowed me to bring up my custom TAP and add support for my own godforsaken instructions.
 
-The script can be found [here](https://github.com/Essenceia/Systolic_MAC_with_DFT/blob/main/jtag/openocd.cfg)), and here is a log of me interfacing with this custom accelerator during emulation:
+The script can be found [here](https://github.com/Essenceia/Systolic_MAC_with_DFT/blob/main/jtag/openocd.cfg), 
+and below is ~~proof of my crime~~ a log of me interfacing with my design during emulation:
 
 ```  
 Open On-Chip Debugger 0.12.0+dev-02171-g11dc2a288 (2025-11-23-19:25)  
@@ -567,6 +572,8 @@ Info : JTAG tap: tpu.tap tap/device found: 0x1beef0d7 (mfg: 0x06b (Transwitch), 
 ```
   
 Readers having reached enlightenment in their level of familiarity with the JTAG protocol might notice that the [chip actually advertises itself as an Nvidia accelerator (mfg `0x06b`.)](https://github.com/openocd-org/openocd/blob/587c7831033cda2c5aa683d18a183df52b631004/src/helper/jep106.inc#L497)
+
+It's good to have dreams. 
 
 ## Conclusion
 
