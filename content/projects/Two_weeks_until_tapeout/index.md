@@ -1,8 +1,18 @@
-# **Two Weeks until Tapeout**
+---
+title: "Two weeks until tapeout"
+date: 2026-01-02
+description: ""
+summary: ""
+tags: ["asic", "gf180", "180nm", "rtl", "verilog", "JTAG", "DFT", "systolic_array", "arithmetic"]
+draft: true
+showTableOfContents: true
+---
+
+## Living under rocks
 
 As anyone that hasn’t been living under a rock might have heard, AI accelerators are the coolest kids in town these days. And although I have never been part of the “in” crowd, this time at least, I get the appeal. 
 
-So when the opportunity arose to join an experimental shuttle using global foundries 180nm for FREE I jumped onto the opportunity and designed my own JTAG\\\! 
+So when the opportunity arose to join an experimental shuttle using global foundries 180nm for FREE I jumped onto the opportunity and designed my own JTAG\! 
 
 …
 
@@ -12,24 +22,25 @@ Frankly, I would love to tell you a great story about how I went into this wanti
 
 Also, I’m designing everything from scratch and have only two weeks left, welcome to the crunch. 
 
-https://github.com/Essenceia/Systolic\_MAC\_with\_DFT/tree/main
+{{< github repo="Essenceia/Systolic_MAC_with_DFT" showThumbnail=false >}}
 
-{{\< alert \>}}  
-If you are looking for a more formal overview of this ASIC, you can find the datasheet \[here\](https://github.com/Essenceia/Systolic\_MAC\_with\_DFT/blob/main/docs/info.md)
 
-{{\< /alert \>}}
+{{< alert >}}  
+If you are looking for a more formal overview of this ASIC, you can find the datasheet [here](https://github.com/Essenceia/Systolic_MAC_with_DFT/blob/main/docs/info.md)
 
-\#\#\# Experimental shuttle 
+{{< /alert >}}
+
+### Experimental shuttle 
 
 Once again this tapeout was done as part of a Tiny Tapeout shuttle, but this time, it went out as part of the experimental shuttle. 
 
-{{\< alert "heart" \>}} 
+{{< alert "heart" >}} 
 
-You can learn more about the awesome Tiny Tapeout shuttle programs at the official website: \[https://tinytapeout.com/\](https://tinytapeout.com/)
+You can learn more about the awesome Tiny Tapeout shuttle programs at the official website: [https://tinytapeout.com](https://tinytapeout.com/)
 
-{{\< /alert \>}}
+{{< /alert >}}
 
-These experimental shuttles are used as testing grounds for new nodes and flows and are used to iron out issues before opening up the public. \\
+These experimental shuttles are used as testing grounds for new nodes and flows and are used to iron out issues before opening up the public. 
 
 Participation in these experimental shuttles is commonly reserved to contributors having previously submitted to Tiny Tapeout. 
 
@@ -37,30 +48,26 @@ This limitation was set in place in order to help select for veteran designers a
 
 Contributions to these shuttles are done with the understanding that the resulting chip might not be functional for some reason outside of the designers control. 
 
-Given these limitations, the Tiny Tapeout program is generously making submissions to these shuttles free of charge. \\
+Given these limitations, the Tiny Tapeout program is generously making submissions to these shuttles free of charge. 
 
 In practice, this makes area effectively free, explaining the higher occurrence of absolutely massive designs being submitted.
 
-{{\< figure 
-
-    src="tt\_gf02.png"
-
+{{< figure 
+    src="tt_gf02.png"
     caption="Full GDS render of the GF 0.2 Tiny Tapeout chip, with a lot of large multi-tile designs."
-
     alt="chip render"
+>}}
 
-\>}}
-
-If the final chip is deemed sufficiently functional, the resulting ASICs along with the dev board will be available for purchase at the \[Tiny Tapeout store\](https://store.tinytapeout.com/).
+If the final chip is deemed sufficiently functional, the resulting ASICs along with the dev board will be available for purchase at the [Tiny Tapeout store](https://store.tinytapeout.com/).
 
 Given you need to have taped out a chip with Tiny Tapeout before to be eligible, I became eligible 14 days before the experimental shuttle submission deadline.
 
 ## Combo
 
-Before we start, let us acknowledge that what I am attempting to do, alone, if this were any normal corporate setting, this would be the deadline equivalent to a one way ticket straight to the ever-lengthening queue outside the gates of Hell. Do not try this at work\! 
+Before we start, let us acknowledge that what I am attempting to do, alone, if this were any normal corporate setting, this would be the deadline equivalent to a one way ticket straight to the ever-lengthening queue outside the gates of Hell. Do not try this at work! 
 
-Now that safety precautions are out of the way : 
-
+Now that safety precautions are out of the way:
+ 
 Welcome to a tale of two designs. 
 
 The first, is the systolic array, at the heart of an AI inference accelerator, its function is to perform matrix-matrix multiplications. 
@@ -82,53 +89,53 @@ Given my self-imposed dire straits of a timeline, if I wanted to have any hope w
 
 The most astute readers might have noticed that this grand strategy is  pretty much the same roadmap I always use. 
 
-\> If it aint broken dont fix it.   
-\~ a wise man
+> If it aint broken dont fix it.
+~ a wise man
 
-\#\#\# The flow saves the day
+### The flow saves the day
 
 So, why am I doing this to myself? Well, self delusion is a powerful force, and it was telling me this timeline would be possible if I leveraged my previous experience with the Tiny Tapeout/Librelane/OpenRoad flows, my existing personal linting/simulation/fpga/firmware flows, my existing code bases, and my own ~~ingrained knowledge of the dark arts~~ experience. 
 
 But, let us not delude ourselves, the saving grace of this terrible idea was really just how great the Tiny Tapeout/Librelane/OpenRoad ASIC flow is. 
 
-{{\< alert “circle-info” \>}}
+{{< alert “circle-info” >}}
 
-The following section assumes readers are already familiar with the Open Source Silicon ecosystem. \\  
-For those not already familiar with Tiny Tapeout, Librelane and OpenRoad, you can find a short description of these \[in my previous  hashing accelerator ASIC article, where I introduce some of the great tools that the open source silicon ecosystem has created. \]([https://essenceia.github.io/projects/blake2s\_hashing\_accelerator\_a\_solo\_tapeout\_journey/\#open-source-silicon](https://essenceia.github.io/projects/blake2s_hashing_accelerator_a_solo_tapeout_journey/#open-source-silicon))
+The following section assumes readers are already familiar with the Open Source Silicon ecosystem. \ 
+For those not already familiar with Tiny Tapeout, Librelane and OpenRoad, you can find a short description of these [in my previous  hashing accelerator ASIC article, where I introduce some of the great tools that the open source silicon ecosystem has created. ](https://essenceia.github.io/projects/blake2s_hashing_accelerator_a_solo_tapeout_journey/#open-source-silicon))
 
-{{\< /alert \>}}
+{{< /alert >}}
 
-\[The OpenROAD project\](https://openroad.readthedocs.io/en/latest/) was conceived with a no-human-in-the-loop (NHIL) target, and the goal of enabling 24-hour-or-less design turnaround times. \\  
-\[Librelane\](https://librelane.readthedocs.io/en/latest/), the master coordinator of the flow itself, brings together OpenRoad, Yoysy, ABC, Magic, and many more amazing open source tools, building on top of this philosophy. Created a process that takes you from your verilog and a few configurations all the way to the tapeout ready artifacts, in an extremely streamlined and fast fashion, requiring minimal human intervention. \\  
+[The OpenROAD project](https://openroad.readthedocs.io/en/latest/) was conceived with a no-human-in-the-loop (NHIL) target, and the goal of enabling 24-hour-or-less design turnaround times. \  
+[Librelane](https://librelane.readthedocs.io/en/latest/), the master coordinator of the flow itself, brings together OpenRoad, Yoysy, ABC, Magic, and many more amazing open source tools, building on top of this philosophy. Created a process that takes you from your verilog and a few configurations all the way to the tapeout ready artifacts, in an extremely streamlined and fast fashion, requiring minimal human intervention. \  
 Tiny Tapeout then completes the loop, running your testbenches, both the classic and the timing annotated post implementation versions (using the free to use but not open source CVC simulator), on top of the entire implementation, and then allowing you to automatically   upload your GDSII for integration into the shuttle chip.
 
 This deeply resonates with my personal beliefs that faster iteration times are central to higher quality and more efficient design :
 
-\> \[Since I believe a low iteration time is paramount to project velocity and getting big things done, I also want to automatize all of the Vivado flow from taking the rtl to the SVF generation.  
-\~ Previous article: Alibaba cloud FPGA: the 200$ Kintex UltraScale+\](https://essenceia.github.io/projects/alibaba\_cloud\_fpga/)
+> Since I believe a low iteration time is paramount to project velocity and getting big things done, I also want to automatize all of the Vivado flow from taking the rtl to the SVF generation.  
+~ Previous article: Alibaba cloud FPGA: the 200$ Kintex UltraScale+\](https://essenceia.github.io/projects/alibaba\_cloud\_fpga/)
 
-Thus, not only was I building on top of a legacy of efficient design flows, but I had previously ~~spent~~ invested a lot of time streamlining my tasks, especially repetitive ones. \\  
+Thus, not only was I building on top of a legacy of efficient design flows, but I had previously ~~spent~~ invested a lot of time streamlining my tasks, especially repetitive ones. \  
 A classic example would be my FPGA build flow used for emulation. It only requires a single command to create the Vivado project, read all the rtl and constraint files, synthesize, optionally add an ILA core and connect any wires marked for debug to it, implement, and then flash the bitstream.
 
-\`\`\`bash   
+``sh   
 make fpga\_prog debug=1  
-\`\`\`
+```
 
 Essentially, the bottleneck to making this design, from scratch in 10 days, wasn’t going to be the tools, but the squishy human between the chair and the keyboard. 
 
-{{\< figure  
-	src=”homo\_electronicus.jpg”  
-	caption="\*homo electro-engineerus\* observed in its natural habitat in a pre-tapeout hibernation period known as a 'crunch'. During this period, the specimen will seldom move from its cave, surviving exclusively on a diet of 'coffee' and 'HEB smoked ham'.”  
+{{< figure  
+	src=”homo_electronicus.jpg”  
+	caption="*homo electro-engineerus* observed in its natural habitat in a pre-tapeout hibernation period known as a 'crunch'. During this period, the specimen will seldom move from its cave, surviving exclusively on a diet of 'coffee' and 'HEB smoked ham'.”  
 	alt=”me only my couch”  
-\>}}
+>}}
 
 ## Design 
 
-Without further ado, let's talk design \!
+Without further ado, let's talk design !
 
-\#\#\# Systolic Array Design
+### Systolic Array Design
 
-The goal of this systolic array is to perform a 2×2 matrix-matrix multiply on 8-bit integer numbers. \\
+The goal of this systolic array is to perform a 2×2 matrix-matrix multiply on 8-bit integer numbers. 
 
 Without going too much into detail on why systolic arrays are the recurring stars at the heart of modern AI inference accelerators, their main strength is achieving a high ratio of compute to everything else. And since memory operations are the most expensive family of operations by far, a higher compute to memory operation ratio. 
 
@@ -136,9 +143,9 @@ Data is recirculated directly within the array and reused across multiple consec
 
 Thus, the larger the systolic array, the deeper the chain of compute , the better this compute to memory ratio becomes.
 
-{{\< alert “lightbulb” \>}}
+{{< alert “lightbulb” >}}
 
-As an illustrative example of this evolution of compute ratios, let us compare the power cost of 64 bit floating point multiply-add (MAC) operations in a hypothetical systolic array designed on a 45nm node running at 0.9V. Compared with the energy expenditure needed to access this data using 256 bit wide reads to the 16nm DRAM. DRAM access costs will include the 10mm of wire, interface and access costs. \\  
+As an illustrative example of this evolution of compute ratios, let us compare the power cost of 64 bit floating point multiply-add (MAC) operations in a hypothetical systolic array designed on a 45nm node running at 0.9V. Compared with the energy expenditure needed to access this data using 256 bit wide reads to the 16nm DRAM. DRAM access costs will include the 10mm of wire, interface and access costs. \ 
 In this example, we will very generously assume the weights are stored in place and do not need to be updated, so will assume only the input data matrix needs to be read from DRAM. 
 
 | Operation | 45 nm |
@@ -151,17 +158,17 @@ In this example, we will very generously assume the weights are stored in place 
 | 256-bit DRAM interface | 5,120 pJ |
 | 256-bit DRAM access | 2,048 pJ |
 
-source: \[ENERGY PROPORTIONAL MEMORY SYSTEMS\](https://chipgen.stanford.edu/people/alum/pdf/1309\_KrishnaMalladi\_EnergyProportionalMem.pdf)
+source: [ENERGY PROPORTIONAL MEMORY SYSTEMS](https://chipgen.stanford.edu/people/alum/pdf/1309_KrishnaMalladi_EnergyProportionalMem.pdf)
 
-\<iframe width="1235" height="410" seamless frameborder="0" scrolling="no" src="[https://docs.google.com/spreadsheets/d/e/2PACX-1vQUBNKY6p002MAHfx2ZwM7ma6JbIT4\_ikELe73NfP3mZw15dAKJaMlBQCjc-J-Zr8gtkhlDrVvrEvrx/pubchart?oid=727837197\&amp;format=interactive](https://docs.google.com/spreadsheets/d/e/2PACX-1vQUBNKY6p002MAHfx2ZwM7ma6JbIT4_ikELe73NfP3mZw15dAKJaMlBQCjc-J-Zr8gtkhlDrVvrEvrx/pubchart?oid=727837197&amp;format=interactive)"\>\</iframe\>
+<iframe width="1235" height="410" seamless frameborder="0" scrolling="no" src="[https://docs.google.com/spreadsheets/d/e/2PACX-1vQUBNKY6p002MAHfx2ZwM7ma6JbIT4\_ikELe73NfP3mZw15dAKJaMlBQCjc-J-Zr8gtkhlDrVvrEvrx/pubchart?oid=727837197\&amp;format=interactive](https://docs.google.com/spreadsheets/d/e/2PACX-1vQUBNKY6p002MAHfx2ZwM7ma6JbIT4_ikELe73NfP3mZw15dAKJaMlBQCjc-J-Zr8gtkhlDrVvrEvrx/pubchart?oid=727837197&amp;format=interactive)"></iframe>
 
 Even though I purposefully chose 64 bit floats, the most energy intensive arithmetic operation, it still required a 16x16 systolic array before the cost of compute started exceeding the cost of the initial DRAM value read. 
 
-{{\< /alert \>}}
+{{< /alert >}}
 
 Another great feature of systolic arrays is how regular they are and how well their design scales. So, although today I am designing a small 2x2 array, without much re-work this can be scaled up to a larger 256x256 array. 
 
-{{\< alert “circle-info” \>}} 
+{{< alert “circle-info” >}} 
 
 Some of you might be wondering: if area is free and systolic arrays scale so well, why am I limiting myself to only making a 2x2 array ? \\
 
@@ -169,17 +176,17 @@ Well, because I am a good neighbor and any additional tile of area I use is pote
 
 Since the initial motivation for this project was to design some proven in silicon debug infrastructure, a 2x2 array is sufficient for my needs. 
 
-{{\< /alert \>}}
+{{< /alert >}}
 
 ### **Constraints**
 
 Since this ASIC is once again taping out as part of a Tiny Tapeout shuttle, it has to grapple with the similar limitations as my \[previous hashing accelerator\](https://essenceia.github.io/projects/blake2s\_hashing\_accelerator\_a\_solo\_tapeout\_journey/\#io-bottleneck), namely: the eternal I/O bandwidth limitation\! 
 
-{{\< figure  
+{{< figure  
 	src=”chip.svg”  
 	caption=”Tiny Tapeout chip (I recommend switching the page to light mode for better readability of the pin names)”  
 	alt=”chip schematic”  
-\>}}
+>}}
 
 This limitations come in two flavors:
 
@@ -203,78 +210,74 @@ This system is broken in two main parts :
 
 Since this is a 2×2 systolic array, there are four compute units. Each unit takes in an 8 bit signed integer and performs a multiply, addition, and a clamping operation, producing 8 bit signed integers. 
 
-\#\#\#\# Multiplication
+#### Multiplication
 
-### The multiply is done using a custom (from scratch) implementation of a Booth Radix-4 multiplier with Wallace trees. 
+The multiply is done using a custom (from scratch) implementation of a Booth Radix-4 multiplier with Wallace trees. 
 
-### This multiplier architecture strikes a good balance between area, power and performance, and can be regarded as the multiplier equivalent of what "rental white"™\[1\]  is to interior design. \\
+This multiplier architecture strikes a good balance between area, power and performance, and can be regarded as the multiplier equivalent of what "rental white"™\[1\]  is to interior design. \\
 
-### 
 
-### Meaning it is a solid, well rounded from a PPA’s perspective, multiplier option, that without being anything novel or groundbreaking, is probably good enough for your use case. (And given my \+2ns of worst negative slack, and comfortable area occupancy, it was plenty good enough for mine.)
 
-### 
+Meaning it is a solid, well rounded from a PPA’s perspective, multiplier option, that without being anything novel or groundbreaking, is probably good enough for your use case. (And given my \+2ns of worst negative slack, and comfortable area occupancy, it was plenty good enough for mine.)
+
+
 
 Another advantage of booth radix-4 is that, since we are performing a signed multiplication, we can optimize out a level in the Wallace tree we are using for the partial product additions given we only have 4 partial products, unlike the 5 needed for unsigned operations.
 
-{{\< alert “info-circle” \>}}  
+{{< alert “info-circle” >}}  
 The original article plan included an in-depth explanation of the booth radix-4 multiplication implementation and optimization, resulting in a very interesting but also very dry multi-page explanation covered with boolean algebra. Resulting in its canning. 
 
 If you are looking for a good explanation of this multiplier and its optimization see chapter 11 of ‘CMOS VLSI Design: A Circuits and Systems Perspective’. 
 
 Link to David Money Harris (co-author) blog: \[https://pages.hmc.edu/harris/cmosvlsi/4e/index.html\](https://pages.hmc.edu/harris/cmosvlsi/4e/index.html)
 
-{{\< /alert \>}} 
+{{< /alert >}} 
 
-\#\#\#\# Clamping
+#### Clamping
 
-### The clamping operation occurs after both the multiply and addition operations. At which point the data is now 17 bit wide, and since we want to prevent our data size from exploding, the clamping operation is needed to clamp the outgoing data back down to eight bits.
+The clamping operation occurs after both the multiply and addition operations. At which point the data is now 17 bit wide, and since we want to prevent our data size from exploding, the clamping operation is needed to clamp the outgoing data back down to eight bits.
 
 $$  
 clamp\_{i8}(c\_{(t,x,y)}) \= \\begin{cases}  
-   127 &\\text{if } c\_{(t,x,y}) \> 127\\\\  
+   127 &\\text{if } c\_{(t,x,y}) > 127\\\\  
    c\_{(t,x,y)} &\\text{if } c\_{(t,x,y)} \\in \[-128,127\] \\\\  
-    \-128 &\\text{if } c\_{(t,x,y}) \< \-128\\\\  
+    \-128 &\\text{if } c\_{(t,x,y}) < \-128\\\\  
 \\end{cases}  
 $$
 
-\#\#\#\# In place weight storage
+#### In place weight storage
 
-### Given that the weights have high temporal and spatial locality, meaning the same set of weights can be reused over multiple unique input data matrices, in order to save on bandwidth, the choice was made to store an 8 bit weight in place inside of each unit. 
+Given that the weights have high temporal and spatial locality, meaning the same set of weights can be reused over multiple unique input data matrices, in order to save on bandwidth, the choice was made to store an 8 bit weight in place inside of each unit. 
 
-### A separate control sequence allows the user to load a new set of weights inside each of the units. The weight packet is sent over four consecutive cycles using the same data input interface as the input matrix. 
+A separate control sequence allows the user to load a new set of weights inside each of the units. The weight packet is sent over four consecutive cycles using the same data input interface as the input matrix. 
 
-### 
 
-### Array controller 
 
-### 
+#### Array controller 
 
-### Given the way in which the matrix matrix multiplication is performed using a systolic array, the input data matrix needs to be shaped and fed to the array in a staged manner. 
+Given the way in which the matrix matrix multiplication is performed using a systolic array, the input data matrix needs to be shaped and fed to the array in a staged manner. 
 
-### Understandably readers might not instinctively get what I mean by "the data needs to be shaped”.
+Understandably readers might not instinctively get what I mean by "the data needs to be shaped”.
 
-### In order to help better illustrate this point, I would like to bring your attention to a great animation to show how data flows through the array. 
+In order to help better illustrate this point, I would like to bring your attention to a great animation to show how data flows through the array. 
 
-### An added bonus is that this animation is also of a 2×2 systolic array, such that it shares the same data with the same arrival constraints as my accelerator.
+An added bonus is that this animation is also of a 2×2 systolic array, such that it shares the same data with the same arrival constraints as my accelerator.
 
-### {{\< alert “circle-info” \>}}
+{{< alert “circle-info” >}}
 
-### This animation is not a carbon copy of my accelerator. Rather, readers should use this animation as a tool to better understand how data flows in a systolic way and how it results in the computation of a matrix-matrix multiplication. For the sake of completeness, I would like to point out the major differences with my implementation:
+This animation is not a carbon copy of my accelerator. Rather, readers should use this animation as a tool to better understand how data flows in a systolic way and how it results in the computation of a matrix-matrix multiplication. For the sake of completeness, I would like to point out the major differences with my implementation:
 
-* ### this animation uses floating-point numbers, I am using 8-bit integers
+- this animation uses floating-point numbers, I am using 8-bit integers
+- There is no clamping step
+- The timings are not entirely identical. In my accelerator, many more operations occur on the same cycle. Granted, this was probably done in an effort to help make the animation more legible.
 
-* ### There is no clamping step
+{{< /alert >}} 
 
-* ### The timings are not entirely identical. In my accelerator, many more operations occur on the same cycle. Granted, this was probably done in an effort to help make the animation more legible.
+In addition to helping shape the input data to the systolic array, this controller also helps coordinate data transfers around my I/O limitations. 
 
-### {{\< /alert \>}} 
+Given the parallel data bus allows only 8 bits of input data to arrive per cycle, it is used to control the input buffers in order to accumulate enough data to create the next wave. 
 
-### In addition to helping shape the input data to the systolic array, this controller also helps coordinate data transfers around my I/O limitations. 
-
-### Given the parallel data bus allows only 8 bits of input data to arrive per cycle, it is used to control the input buffers in order to accumulate enough data to create the next wave. 
-
-### Similarly on the output side, when the accelerator produces two 8-bit results per cycle, the controller stores the results in an output buffer in order to only stream out 8 bits per cycle.
+Similarly on the output side, when the accelerator produces two 8-bit results per cycle, the controller stores the results in an output buffer in order to only stream out 8 bits per cycle.
 
 **Validation**
 
@@ -284,7 +287,7 @@ This validation followed my standard approach of providing a set of input data m
 
 Given the nature of the problem. I made extensive use of randomization in order to get better testing coverage and attempt to hit corner cases that would not have been revealed using a directed approach. This randomization randomized both the values of the inputs weight and data, and also the timings with which this incoming data was fed over the parallel bus to the accelerator.
 
-\#\#\#\# Firmware 
+#### Firmware 
 
 The firmware used to interface with this accelerator was designed to run on the RP2040 Raspberry Pi silicon and used the PIO hardware block to drive the parallel port. 
 
@@ -313,22 +316,22 @@ In addition to implementing all of the basic JTAG features in order to be compli
 
 Required instructions : 
 
-- \`EXTEST\`, opcode \`0x0\`, boundary scan operation   
-- \`IDCODE\`, opcode \`0x1\`, read JTAG tap identifiers, which allows the hardware to advertise itself on the JTAG scan chain  
-- SAMPLE\_PRELOAD, opcode 0x2, boundary scan operation   
-- BYPASS, opcode 0x7, set the TAP in bypass mode
+- `EXTEST`, opcode `0x0`, boundary scan operation   
+- `IDCODE`, opcode `0x1`, read JTAG tap identifiers, which allows the hardware to advertise itself on the JTAG scan chain  
+- `SAMPLE_PRELOAD`, opcode `0x2`, boundary scan operation   
+- `BYPASS`, opcode `0x7`, set the TAP in bypass mode
 
 Custom instructions : 
 
-- USER\_REG, opcode 0x3, custom instruction used to probe the internal register
+- `USER_REG`, opcode `0x3`, custom instruction used to probe the internal register
 
 The systolic array is quite a deep structure in the sense that the data is directly reused as it is recirculated within the systolic array. 
 
 As such, it is very easy to lose track of what the internal state is, having only the input and output observable to the end user. Although this might stay manageable with a 2 x 2 array as structure grows larger, it starts becoming more and more problematic. 
 
-In order to help address this future user issue in this tapeout, I added the custom USER\_REG JTAG instruction to read the current state of a target computer units internal registers. 
+In order to help address this future user issue in this tapeout, I added the custom USER_REG JTAG instruction to read the current state of a target computer units internal registers. 
 
-\[Link to the datasheet of the USER\_REG instruction\](https://github.com/Essenceia/Systolic\_MAC\_with\_DFT/tree/main?tab=readme-ov-file\#user\_reg)
+[Link to the datasheet of the `USER_REG` instruction](https://github.com/Essenceia/Systolic_MAC_with_DFT/tree/main?tab=readme-ov-file#user_reg)
 
 ### Design 
 
@@ -336,131 +339,136 @@ The JTAG TAP design itself is rather quite straightforward as JTAG was conceived
 
 What does makes this design more interesting is how the JTAG and the systolic array live in two different clock domains. Making this accelerator have not one but two separate clock trees. On the altar of this noble cause, I sacrificed one of my precious data input pins to serve as the JTAG clock in input (TCK).
 
-{{\< figure  
-	src=”array\_clk.webp”  
+{{< figure  
+	src=”array_clk.webp”  
 	caption=”Clock tree of clk, the clock from the systolic array.”   
 	alt=”clk tree 0”  
-\>}}  
-{{\< figure  
-	src=”tck\_tree.webp”  
+>}}  
+{{< figure  
+	src=”tck_tree.webp”  
 	caption=”Clock tree of the tck, the clk for the JTAG. You can see it spreads towards the systolic array logic, because it is accessing the internal registers of the compute units.”  
 	alt=”clk tree 1”  
-\>}}
+>}}
 
 The SDC script I used to generate these two clock trees drew heavy inspiration from the official LibreLane clock generation SDC, but was re-adapted from my contorted used case:   
-\`\`\`sdc  
-\# modified librelane base.sdc to support 2 clocks
 
-\# custom env variable  
-set ::env(JTAG\_CLOCK\_PERIOD) 500
+```tcl
+# modified librelane base.sdc to support 2 clocks
 
-if { \[info exists ::env(CLOCK\_PORT)\] } {  
-    set port\_count \[llength $::env(CLOCK\_PORT)\]  
-    puts "\\\[INFO\] Found ${port\_count} clocks : $::env(CLOCK\_PORT)%"  
-    if { $port\_count \== "0" } {  
-        puts "\\\[ERROR\] No CLOCK\_PORT found."  
-        error  
+# custom env variable
+set ::env(JTAG_CLOCK_PERIOD) 500
+
+
+if { [info exists ::env(CLOCK_PORT)] } {
+    set port_count [llength $::env(CLOCK_PORT)]
+    puts "\[INFO] Found ${port_count} clocks : $::env(CLOCK_PORT)%"
+    if { $port_count == "0" } {
+        puts "\[ERROR] No CLOCK_PORT found."
+        error
     }
 
-    \# set both clock ports  
-    set ::clock\_port \[lindex $::env(CLOCK\_PORT) 0\]  
-    set ::jtag\_clock\_port \[lindex $::env(CLOCK\_PORT) 1\]  
+    # set both clock ports
+    set ::clock_port [lindex $::env(CLOCK_PORT) 0]
+    set ::jtag_clock_port [lindex $::env(CLOCK_PORT) 1]
 }
 
-set port\_args \[get\_ports $clock\_port\]  
-set jtag\_port\_args \[get\_ports $jtag\_clock\_port\]
 
-puts "\\\[INFO\] Using clock $clock\_port… with args $port\_args"  
-puts "\\\[INFO\] Using jtag clock $jtag\_clock\_port… with args $jtag\_port\_args"
+set port_args [get_ports $clock_port]
+set jtag_port_args [get_ports $jtag_clock_port]
 
-create\_clock {\*}$port\_args \-name $clock\_port \-period $::env(CLOCK\_PERIOD)  
-create\_clock {\*}$jtag\_port\_args \-name $jtag\_clock\_port \-period $::env(JTAG\_CLOCK\_PERIOD)
+puts "\[INFO] Using clock $clock_port… with args $port_args"
+puts "\[INFO] Using jtag clock $jtag_clock_port… with args $jtag_port_args"
 
-set input\_delay\_value \[expr $::env(CLOCK\_PERIOD) \* $::env(IO\_DELAY\_CONSTRAINT) / 100\]  
-set output\_delay\_value \[expr $::env(CLOCK\_PERIOD) \* $::env(IO\_DELAY\_CONSTRAINT) / 100\]  
-puts "\\\[INFP\] for clk $clock\_port :"  
-puts "\\\[INFO\] Setting output delay to: $output\_delay\_value"  
-puts "\\\[INFO\] Setting input delay to: $input\_delay\_value"
 
-\# keep the same io delay constraints for jtag   
-set jtag\_input\_delay\_value \[expr $::env(JTAG\_CLOCK\_PERIOD) \* $::env(IO\_DELAY\_CONSTRAINT) / 100\]  
-set jtag\_output\_delay\_value \[expr $::env(JTAG\_CLOCK\_PERIOD) \* $::env(IO\_DELAY\_CONSTRAINT) / 100\]  
-puts "\\\[INFP\] for clk $jtag\_clock\_port :"  
-puts "\\\[INFO\] Setting output delay to: $jtag\_output\_delay\_value"  
-puts "\\\[INFO\] Setting input delay to: $jtag\_input\_delay\_value"
+create_clock {*}$port_args -name $clock_port -period $::env(CLOCK_PERIOD)
+create_clock {*}$jtag_port_args -name $jtag_clock_port -period $::env(JTAG_CLOCK_PERIOD)
 
-set\_max\_fanout $::env(MAX\_FANOUT\_CONSTRAINT) \[current\_design\]  
-if { \[info exists ::env(MAX\_TRANSITION\_CONSTRAINT)\] } {  
-    set\_max\_transition $::env(MAX\_TRANSITION\_CONSTRAINT) \[current\_design\]  
-}  
-if { \[info exists ::env(MAX\_CAPACITANCE\_CONSTRAINT)\] } {  
-    set\_max\_capacitance $::env(MAX\_CAPACITANCE\_CONSTRAINT) \[current\_design\]  
+set input_delay_value [expr $::env(CLOCK_PERIOD) * $::env(IO_DELAY_CONSTRAINT) / 100]
+set output_delay_value [expr $::env(CLOCK_PERIOD) * $::env(IO_DELAY_CONSTRAINT) / 100]
+puts "\[INFP] for clk $clock_port :"
+puts "\[INFO] Setting output delay to: $output_delay_value"
+puts "\[INFO] Setting input delay to: $input_delay_value"
+
+
+# keep the same io delay constraints for jtag 
+set jtag_input_delay_value [expr $::env(JTAG_CLOCK_PERIOD) * $::env(IO_DELAY_CONSTRAINT) / 100]
+set jtag_output_delay_value [expr $::env(JTAG_CLOCK_PERIOD) * $::env(IO_DELAY_CONSTRAINT) / 100]
+puts "\[INFP] for clk $jtag_clock_port :"
+puts "\[INFO] Setting output delay to: $jtag_output_delay_value"
+puts "\[INFO] Setting input delay to: $jtag_input_delay_value"
+
+
+set_max_fanout $::env(MAX_FANOUT_CONSTRAINT) [current_design]
+if { [info exists ::env(MAX_TRANSITION_CONSTRAINT)] } {
+    set_max_transition $::env(MAX_TRANSITION_CONSTRAINT) [current_design]
+}
+if { [info exists ::env(MAX_CAPACITANCE_CONSTRAINT)] } {
+    set_max_capacitance $::env(MAX_CAPACITANCE_CONSTRAINT) [current_design]
 } 
 
-\# clk  
-set clk\_input \[get\_port $clock\_port\]  
-set clk\_indx \[lsearch \[all\_inputs\] $clk\_input\]  
-set all\_inputs\_wo\_clk \[lreplace \[all\_inputs\] $clk\_indx $clk\_indx ""\]
+# clk
+set clk_input [get_port $clock_port]
+set clk_indx [lsearch [all_inputs] $clk_input]
+set all_inputs_wo_clk [lreplace [all_inputs] $clk_indx $clk_indx ""]
 
-\# jtag clk  
-set jtag\_clk\_input \[get\_port $jtag\_clock\_port\]  
-set jtag\_clk\_indx \[lsearch \[all\_inputs\] $jtag\_clk\_input\]  
-set jtag\_all\_inputs\_wo\_clk \[lreplace \[all\_inputs\] $jtag\_clk\_indx $jtag\_clk\_indx ""\]
+# jtag clk
+set jtag_clk_input [get_port $jtag_clock_port]
+set jtag_clk_indx [lsearch [all_inputs] $jtag_clk_input]
+set jtag_all_inputs_wo_clk [lreplace [all_inputs] $jtag_clk_indx $jtag_clk_indx ""]
 
-\# rst  
-set all\_inputs\_wo\_clk\_rst $all\_inputs\_wo\_clk
+# rst
+set all_inputs_wo_clk_rst $all_inputs_wo_clk
 
-\# jtag has no trst so there is no need to define another rst path 
+# jtag has no trst so there is no need to define another rst path 
 
-\# correct resetn  
-set clocks \[get\_clocks $clock\_port\]
+# correct resetn
+set clocks [get_clocks $clock_port]
 
-set\_input\_delay $input\_delay\_value \-clock $clocks $all\_inputs\_wo\_clk\_rst  
-set\_output\_delay $output\_delay\_value \-clock $clocks \[all\_outputs\]
+set_input_delay $input_delay_value -clock $clocks $all_inputs_wo_clk_rst
+set_output_delay $output_delay_value -clock $clocks [all_outputs]
 
-if { \!\[info exists ::env(SYNTH\_CLK\_DRIVING\_CELL)\] } {  
-    set ::env(SYNTH\_CLK\_DRIVING\_CELL) $::env(SYNTH\_DRIVING\_CELL)  
+if { ![info exists ::env(SYNTH_CLK_DRIVING_CELL)] } {
+    set ::env(SYNTH_CLK_DRIVING_CELL) $::env(SYNTH_DRIVING_CELL)
 }
 
-set\_driving\_cell \\  
-    \-lib\_cell \[lindex \[split $::env(SYNTH\_DRIVING\_CELL) "/"\] 0\] \\  
-    \-pin \[lindex \[split $::env(SYNTH\_DRIVING\_CELL) "/"\] 1\] \\  
-    $all\_inputs\_wo\_clk\_rst
+set_driving_cell \
+    -lib_cell [lindex [split $::env(SYNTH_DRIVING_CELL) "/"] 0] \
+    -pin [lindex [split $::env(SYNTH_DRIVING_CELL) "/"] 1] \
+    $all_inputs_wo_clk_rst
 
-set\_driving\_cell \\  
-    \-lib\_cell \[lindex \[split $::env(SYNTH\_CLK\_DRIVING\_CELL) "/"\] 0\] \\  
-    \-pin \[lindex \[split $::env(SYNTH\_CLK\_DRIVING\_CELL) "/"\] 1\] \\  
-    $clk\_input
+set_driving_cell \
+    -lib_cell [lindex [split $::env(SYNTH_CLK_DRIVING_CELL) "/"] 0] \
+    -pin [lindex [split $::env(SYNTH_CLK_DRIVING_CELL) "/"] 1] \
+    $clk_input
 
-set\_driving\_cell \\  
-    \-lib\_cell \[lindex \[split $::env(SYNTH\_CLK\_DRIVING\_CELL) "/"\] 0\] \\  
-    \-pin \[lindex \[split $::env(SYNTH\_CLK\_DRIVING\_CELL) "/"\] 1\] \\  
-    $jtag\_clk\_input
+set_driving_cell \
+    -lib_cell [lindex [split $::env(SYNTH_CLK_DRIVING_CELL) "/"] 0] \
+    -pin [lindex [split $::env(SYNTH_CLK_DRIVING_CELL) "/"] 1] \
+    $jtag_clk_input
 
-set cap\_load \[expr $::env(OUTPUT\_CAP\_LOAD) / 1000.0\]  
-puts "\\\[INFO\] Setting load to: $cap\_load"  
-set\_load $cap\_load \[all\_outputs\]
+set cap_load [expr $::env(OUTPUT_CAP_LOAD) / 1000.0]
+puts "\[INFO] Setting load to: $cap_load"
+set_load $cap_load [all_outputs]
 
-puts "\\\[INFO\] Setting clock uncertainty to: $::env(CLOCK\_UNCERTAINTY\_CONSTRAINT)"  
-set\_clock\_uncertainty $::env(CLOCK\_UNCERTAINTY\_CONSTRAINT) $clocks
+puts "\[INFO] Setting clock uncertainty to: $::env(CLOCK_UNCERTAINTY_CONSTRAINT)"
+set_clock_uncertainty $::env(CLOCK_UNCERTAINTY_CONSTRAINT) $clocks
 
-puts "\\\[INFO\] Setting clock transition to: $::env(CLOCK\_TRANSITION\_CONSTRAINT)"  
-set\_clock\_transition $::env(CLOCK\_TRANSITION\_CONSTRAINT) $clocks
+puts "\[INFO] Setting clock transition to: $::env(CLOCK_TRANSITION_CONSTRAINT)"
+set_clock_transition $::env(CLOCK_TRANSITION_CONSTRAINT) $clocks
 
-puts "\\\[INFO\] Setting timing derate to: $::env(TIME\_DERATING\_CONSTRAINT)%"  
-set\_timing\_derate \-early \[expr 1-\[expr $::env(TIME\_DERATING\_CONSTRAINT) / 100\]\]  
-set\_timing\_derate \-late \[expr 1+\[expr $::env(TIME\_DERATING\_CONSTRAINT) / 100\]\]
+puts "\[INFO] Setting timing derate to: $::env(TIME_DERATING_CONSTRAINT)%"
+set_timing_derate -early [expr 1-[expr $::env(TIME_DERATING_CONSTRAINT) / 100]]
+set_timing_derate -late [expr 1+[expr $::env(TIME_DERATING_CONSTRAINT) / 100]]
 
-if { \[info exists ::env(OPENLANE\_SDC\_IDEAL\_CLOCKS)\] && $::env(OPENLANE\_SDC\_IDEAL\_CLOCKS) } {  
-    unset\_propagated\_clock \[all\_clocks\]  
-} else {  
-    set\_propagated\_clock \[all\_clocks\]  
+if { [info exists ::env(OPENLANE_SDC_IDEAL_CLOCKS)] && $::env(OPENLANE_SDC_IDEAL_CLOCKS) } {
+    unset_propagated_clock [all_clocks]
+} else {
+    set_propagated_clock [all_clocks]
 }
 
-set\_clock\_groups \-asynchronous \-group $clock\_port \-group $jtag\_clock\_port  
-\`\`\`
 
-**JTAG Verification**
+set_clock_groups -asynchronous -group $clock_port -group $jtag_clock_port
+```
 
 Because the official IEEE JTAG spec lives behind impregnable IEEE paywall, and I have not paid my dues, the verification of the JTAG TAP was actually quite interesting.
 
@@ -481,12 +489,12 @@ Then came the matter of supporting my custom JTAG TAP and its unholy instruction
 
 Luckily for me, the OpenOCD allows you to finetune its behavior, through custom TCL scripts  (did I mention I have PTSD and now love TCL?). 
 
-Luckily, having already gone through the pain of learning to create custom OpenOCD scripts during my \[Alibaba accelerator salvage project\]([https://essenceia.github.io/projects/alibaba\_cloud\_fpga/](https://essenceia.github.io/projects/alibaba_cloud_fpga/)), this was a breeze.\\  
+Luckily, having already gone through the pain of learning to create custom OpenOCD scripts during my [Alibaba accelerator salvage project](https://essenceia.github.io/projects/alibaba_cloud_fpga/)), this was a breeze.\\  
 These custom scripts allowed me to bring up my custom JTAG TAP and even allow me to add support for my own custom instructions.
 
-The script can be found \[here\]([https://github.com/Essenceia/Systolic\_MAC\_with\_DFT/blob/main/jtag/openocd.cfg](https://github.com/Essenceia/Systolic_MAC_with_DFT/blob/main/jtag/openocd.cfg)), and here is a log of me interfacing with this custom accelerator during emulation:
+The script can be found [here](https://github.com/Essenceia/Systolic_MAC_with_DFT/blob/main/jtag/openocd.cfg)), and here is a log of me interfacing with this custom accelerator during emulation:
 
-\`\`\`  
+```  
 Open On-Chip Debugger 0.12.0+dev-02171-g11dc2a288 (2025-11-23-19:25)  
 Licensed under GNU GPL v2  
 For bug reports, read  
@@ -496,16 +504,17 @@ Info : Hardware version: 10.10
 Info : VTarget \= 3.380 V  
 Info : clock speed 2000 kHz  
 Info : JTAG tap: tpu.tap tap/device found: 0x1beef0d7 (mfg: 0x06b (Transwitch), part: 0xbeef, ver: 0x1)  
-\`\`\`  
+```
+  
 Readers having reached enlightenment in their level of familiarity with the JTAG protocol might notice that the \[chip actually advertises itself as an Nvidia accelerator (mfg 0x06b.\](https://github.com/openocd-org/openocd/blob/587c7831033cda2c5aa683d18a183df52b631004/src/helper/jep106.inc\#L497)
 
 **Conclusion**
 
-{{\< figure  
+{{< figure  
 	src=”waffles.jpg”  
 	caption=”The traditional post-tapeout celebratory waffles, after having just pulled an all nighter before the submission deadline”  
 alt=”more waffles”  
-\>}} 
+>}} 
 
 TODO
 
