@@ -149,7 +149,8 @@ The goal of this systolic array is to perform a 2×2 matrix-matrix multiply on 8
 
 Without going too much into detail on why systolic arrays are the recurring stars at the heart of modern AI inference accelerators, 
 their main strength is achieving a high ratio of compute to everything else. And since memory operations are the most 
-expensive family of operations by far, a higher ratio of compute to memory operations. 
+expensive family of operations by far, a hh ratio of compute to memory operations. 
+
 
 Data is recirculated directly within the array and reused across multiple consecutive operations rather than 
 being repeatedly fetched/written from/to memory. This matters because memory accesses are expensive.
@@ -162,8 +163,9 @@ Thus, the larger the systolic array, the deeper the chain of compute, the better
 
 {{< alert "info-cirle" >}}
 The following sub-section is me geeking out on power consumption numbers. 
-If you don't have a deeply engrained passion for discussing pJ you can safely skip it, I won't judge you. 
+If you don't have a deeply engrained passion for discussing pJ (pico Joules) you can safely skip it, I won't judge you. 
 {{< /alert >}}
+
 As an illustrative example of this evolution of compute ratios, let us compare the power cost of 64 bit floating point multiply-add (MAC) operations in a hypothetical systolic array designed on a 45nm node running at 0.9V.
  
 Compared with the energy expenditure needed to access this data using 256 bit wide reads to the 16nm DRAM. DRAM access costs will include the 10mm of wire, interface and access costs.
@@ -185,9 +187,9 @@ source: [ENERGY PROPORTIONAL MEMORY SYSTEMS](https://chipgen.stanford.edu/people
 <iframe width="100%" height="410" seamless frameborder="0" scrolling="yes" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQUBNKY6p002MAHfx2ZwM7ma6JbIT4_ikELe73NfP3mZw15dAKJaMlBQCjc-J-Zr8gtkhlDrVvrEvrx/pubchart?oid=727837197&amp;format=interactive"></iframe>
 
 Even though I purposefully chose 64 bit floats, the most energy intensive arithmetic operation, 
-we still required a 16x16 systolic array before the cost of compute started exceeding the cost of the initial DRAM value reads.
+we still required a 64x64 systolic array before the cost of compute started exceeding the cost of the initial DRAM value reads.
 
-aka: For those not living in 2026, we have uncovered a new clue to the mystery of where all the DRAM chips have suddenly vanished to!  
+aka: For those not living in 2026, we have uncovered a new clue to the mystery of where all the low-power DRAM chips have suddenly vanished to!  
 
 #### Scaling 
 
@@ -213,8 +215,8 @@ Since this ASIC is once again taping out as part of a Tiny Tapeout shuttle, it h
 
 This limitations comes in two flavors:
 
-1. Pin count: Eight input pins, eight output pins, and eight configurable I/O pins, limiting my parallel buses in and out of the accelerator.  
-2. Maximum operating frequency: Unlike with the well-trodden path that was the public Skywater 130nm shuttle tapeout, for this experimental shuttle the maximum switching frequency of these pins hasn’t been characterized yet. And since I haven't yet figured out how to do this characterization using a simulator myself, I've hand-wavingly assumed that both the input and output directions have a sustainable switching frequency of 50 MHz, and have sized the path timings around that assumption.
+1. Pin count: eight input pins, eight output pins, and eight configurable I/O pins, limiting my parallel buses in and out of the accelerator.  
+2. Maximum operating frequency: unlike with the well-trodden path that was the public Skywater 130nm shuttle tapeout, for this experimental shuttle the maximum switching frequency of these pins hasn’t been characterized yet. And since I haven't yet figured out how to do this characterization using a simulator myself, I've hand-wavingly assumed that both the input and output directions have a sustainable switching frequency of 50 MHz, and have sized the path timings around that assumption.
 
 Additionally, I once again have the constraint of not having any SRAM. Though unlike with the Skywater 130 tapeout, the GlobalFoundries 180nm PDK does include a proven SRAM macro! 
 
@@ -243,9 +245,7 @@ The multiply is done using a custom (from scratch) implementation of a Booth Rad
 
 This multiplier architecture strikes a good balance between area, power and performance, and can be regarded as the multiplier equivalent of what "Rental White™"[1]  is to interior design.
 
-
-Meaning it is a solid, well rounded from a PPA’s perspective, multiplier option, that without being anything novel or groundbreaking, is probably good enough for your use case. (And given my +2ns of worst negative slack, and comfortable area occupancy, it was plenty good enough for mine.)
-
+Meaning it is a solid, well rounded from a PPA’s perspective, multiplier option, that without being anything novel or groundbreaking, is probably good enough for your use case (and given my +2ns of worst negative slack, and comfortable area occupancy, it was plenty good enough for mine).
 
 Another advantage of booth radix-4 is that, since we are performing a signed multiplication, we can optimize out a level in the Wallace tree we are using for the partial product additions given we only have 4 partial products, unlike the 5 needed for unsigned operations.
 
@@ -266,24 +266,9 @@ The clamping operation occurs after both the multiply and addition operations. A
 
 $$
 clamp_{i8}(x) = \begin{cases}
-    127 &\text{if } x > 127 \\
-     x &\text{if } x \in [-128,127] \\
-    -128 &\text{if } x < -128 \\
-\end{cases}
-$$
-
-$$
-x = \begin{cases}
-   a &\text{if } b \\
-   c &\text{if } d
-\end{cases}
-$$
-$$  
-clamp_{i8}(x) = 
-\begin{cases}
-   127 &\text{if } x > 127\\
-   x &\text{if } x \in [-128,127] \\
-    -128 &\text{if } x < -128\\
+\phantom{-}127,\\,\text{if}\\,x > 127, \\\\
+\phantom{-12}x,\\,\text{if}\\,x \in [-128,127], \\\\
+-128,\\,\text{if}\\,x < -128
 \end{cases}
 $$
 
@@ -359,7 +344,7 @@ kind of hardware block providing some in-silicon observability.
 This is absolutely crucial, as it isn't a question of if but when one of my ASIC will have hardware issues.   
 And, when that day comes, not having a view of the internal behavior will only make it that much more painful to identify the root issue in order to fix it for the upcoming generation.
 
-As such, this TAP is actually a part of my larger efforts to help produce a set of DFT (Design for Test) proven IP that I can integrate into all of my future ASICs. As such, I have quite an incentive to have these designs proven early.
+As such, this TAP is actually a part of my larger efforts to help produce a set of DFT (Design for Test) proven IPs/tools that I can integrate into all of my future ASICs. As such, I have quite an incentive to have these designs proven early.
 
 JTAG was chosen as it is a very common debug protocol. Not only is it well-defined but has good off-the-shelf support, both on the hardware (debug probes) and software side.
 
@@ -393,7 +378,10 @@ instruction to read the current state of a target compute units internal registe
 ### Design 
 
 The JTAG TAP design itself is quite straightforward as JTAG was conceived as a hardware first protocol, and this shows 
-in its implementation. The design clearly flows from the JTAG specification to the RTL( unlike you BLAKE2 I am looking at you!).
+in its implementation. The design clearly flows from the JTAG specification to the RTL (n{cases}
+-x, & \text{if } x < 0 \\\\
+\phantom{-}x, & \text{if } x \ge 0
+\end{cases}unlike you BLAKE2 I am looking at you!).
 As such I do not think it is worthwhile to discuss it in detail.
 
 What makes this design more interesting is how the JTAG and the systolic array live in two different clock domains. Making this accelerator have not one but two separate clock trees. 
@@ -403,11 +391,11 @@ On the altar of this noble cause, I sacrificed one of my precious data input pin
 {{< figure  
 	src="array_clk.webp"  
 	caption="Clock tree of clk, the clock from the systolic array."   
-	alt="clk tree 0"  
+	lt="clk tree 0"  
 >}}  
 {{< figure  
 	src="tck_tree.webp"  
-	caption="Clock tree of the tck, the clk for the JTAG. You can see it spreads towards the systolic array logic, because it is accessing the internal registers of the compute units."  
+        caption="Clock tree of the tck, the clk for the JTAG. You can see it spreads towards the systolic array logic, because it is accessing the internal registers of the compute units."  
 	alt="clk tree 1"  
 >}}
 
@@ -532,7 +520,7 @@ set_clock_groups -asynchronous -group $clock_port -group $jtag_clock_port
 ```
 
 Because the official JTAG spec lives behind the impregnable IEEE paywall, a castle in which I am not permitted
-to set foot, the result of not having payed its lord my dues, the verification of the JTAG TAP was actually quite interesting.
+to set foot as a result of not having payed its lord my dues, the verification of the JTAG TAP was actually quite interesting.
 
 Since JTAG is such a common protocol, its easy to find free resources online to build a good mental model of the internal 
 FSM and TAP structure. 
@@ -547,9 +535,9 @@ If I wasn't going to get access to the official spec on how JTAG is expected to 
 To the purists clutching their pearls flabbergasted by the idea of not implementing per the spec: I’m not sorry. 
 But if you do have the official spec here is my [email](mailto:julia.desmazes@gmail.com).  
 
-In practice, whenever OpenOCD flagged my JTAG behavior as problematic, I assumed that my implementation was at fault. And trust me, there were issues. 
+In practice, whenever OpenOCD flagged my JTAG behavior as problematic, I assumed that my implementation was at fault. And trust me, there were issues. I called this
 
-I called this "Designed By SupportTM".
+$$Designed\\, By\\, Support\\,^{TM}$$
 
 Then came the matter of supporting my custom TAP's unholy instructions. 
 
@@ -587,6 +575,24 @@ It's good to have dreams.
 >}} 
 
 TODO
+
+Conclusion topics :
+- reflexions on the ASIC experience.
+  - ASIC is an attractive domain, because of its technical challenge
+    - is why I started this journey, is why I stay.
+  - my long term goal, which everyday becomes less of a dream, is to tapeout my own chips. I want to master all aspects of it.
+  - amazed on the quality of the tooling. Tools _are_ working reliably which is almost unbelievable given how hard ASIC design can be.
+  - projects like this are incredibly valuable in term of knowledge.
+  - I know that I am just at the start of my journey towards 
+  - 
+- time was the great ennemy.
+  - it was hard to not get side tracked
+  - had to get only the minimal feature, so frustration was involved.
+- technical improvements :
+  - move to floating point numbers.
+  - bigger systolic array.
+  - actual scandump.
+  - optimizations.
 
 Although two weeks to design an ASIC would be considered by many to be a deadline way too short, somehow we still made it happen. The chip is now currently in fabrication and will be back in a few months.  
 In parallel, work on the second version has already started, which iterates on this first version by extending it and adding some additional features. Mainly, I would like to try floating-point numbers next time instead of integer math, so that I can brag about my FLOPS instead of my TOPS. Secondly, my silicon debugging structure is being extended by the addition of scan chains.
