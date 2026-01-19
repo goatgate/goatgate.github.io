@@ -4,7 +4,7 @@ date: 2026-01-02
 description: ""
 summary: ""
 tags: ["asic", "gf180", "180nm", "rtl", "verilog", "JTAG", "DFT", "systolic_array", "arithmetic"]
-draft: true
+draft: false
 showTableOfContents: true
 ---
 
@@ -26,6 +26,11 @@ Also, I’m designing everything from scratch and have only two weeks left, welc
 
 {{< github repo="Essenceia/Systolic_MAC_with_DFT" showThumbnail=false >}}
 
+{{< figure
+    src="feature_layout.png"
+    caption="GDS rendering of this project using the GF180 PDK"
+    alt="chip render"
+>}}
 
 {{< alert >}}  
 If you are looking for a more formal overview of this ASIC, you can find the datasheet [here](https://github.com/Essenceia/Systolic_MAC_with_DFT/blob/main/docs/info.md)
@@ -281,6 +286,12 @@ This system is broken into two parts :
 
 Since this is a 2×2 systolic array, there are four compute units. Each unit takes in an 8 bit signed integer and performs a multiply, addition, and a clamping operation, producing 8 bit signed integers. 
 
+{{< figure
+    src="compute_unit.svg"
+    caption="Compute unit critical path."
+    alt="shematic"
+>}}
+
 #### Multiplication
 
 The multiply is done using a custom (from scratch) implementation of a Booth Radix-4 multiplier with Wallace trees. 
@@ -356,6 +367,13 @@ In addition to helping shape the input data to the systolic array, this controll
 Given the parallel data bus allows only 8 bits of input data to arrive per cycle, it is used to control the input buffers in order to accumulate enough data to create the next wave. 
 
 Similarly on the output side, when the accelerator produces two 8-bit results per cycle, the controller stores the results in an output buffer in order to only stream out 8 bits per cycle.
+
+{{< figure
+    src="array_controller.svg"
+    caption="Array Controller interfacing with both the input and output data buffers."
+    alt="shematic"
+>}}
+
 
 ### Validation
 
@@ -610,24 +628,40 @@ It's good to have dreams.
 
 ## Conclusion
 
-My current long term objective is to tape out my own chips.
+And somehow, against all odds, I made it! I met this absurd self-imposed deadline and the chip is now in fabrication! 
 
-There are many parts of the ASIC design that for now are abstracted to me by TinyTapeout, and my objective is to master those domains too to be able to do the same thing, but this time, alone, without the need to be part of a shuttle.
+This project was a battle against time. But making it fit in the end is something I'm honestly very proud of.
 
-This project was a battle against time. In my previous project I had more time but a lot to discover. This time I wanted to reapply the same process, but in two weeks. It was a big rush and the intensity non-linearly increased as the deadline was coming.
+One of the big difficulties was to not get side-tracked. Even if it was frustrating,
+ I had to commit to only adding the minimal set of features needed to get the project rolling. 
+And trust me, the temptation to add, just that one extra little tini tiny feature, either to the systolic array or the debug system,
+was excruciating.
 
-But in the end, I managed to make it fit and I'm honestly very proud of it.
+The good news is that, with this upcoming tapeout ([v2 has already started](https://github.com/Essenceia/DFT_FPGA_Emulation)), I can finally lash out !! 
+My grand strategy is for the next project to be an improvement of both concepts. 
 
-One of the big difficulties was to not get side-tracked. Even if it was frustrating, I had to get only the minimal set of features to get the project rolling. The temptation to spend time to add more features to both the systolic array and the DFT system was big.
+Firstly, I'd like to finally have a rematch with an old adversary of mine: Floating Point arithmetics!
+Less for the TOPS->FLOPS bragging rights, but rather to finally pierce its deep mysteries
+through an optimized hardware implementation of my own. 
 
-The good news is that now, I can finally lash out !! As such, the next project will likely feature an evolution of both concepts. First, I'd like to finally take a shot at an old adversary of mine, the Floating Point representation, less for the TOPS->FLOPS bragging rights than for a chance of understanding the technicalities of it on the HW side. At the same time, I will start building on top of my scanchain implementation, the long term goal being to have a convenient way to extract the state of all flops in my system, and report it in a human readable way.
+Secondly, I will continue extending my debug infrastructure: adding scan chains and an ATPG flow not only to help 
+identify silicon manufacturing issues, but also as a convenient way to extract the current state of all flops
+for usage debugging. 
 
-I would like to finish with a thanks to a company which has not been sponsoring me in any way, and that are totally unaware of my existence, but who never fails to provide the level of reward that I need after an all nighter spent trying to wrap up my design.
+Yet, this is but another step towards my greater long term objective: to tape out my own chip, not 
+as part of Tiny Tapeout, nor as part of a shuttle chip, but entirely on my own. 
+
+There are many minutiea of the ASIC's design that for now (and for good reason) abstracted away by Tiny Tapeout. 
+So, my objective is to use these shuttle programs as a harness while I master the missing skills.
+
+I would like to finish with a thanks to a company, which has not been sponsoring me in any way, 
+is totally unaware of my existence, but who, never the less, never fail to provide the level of reward 
+desperately needed after an all nighter spent trying to wrap up my design:
 
 {{< figure  
 	src="waffles.jpg"  
 	caption="My beloved."  
-    alt="more waffles"  
+    alt="a plate of waffle house waffles "  
 >}} 
 
 ## Footnotes 
