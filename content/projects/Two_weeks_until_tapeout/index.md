@@ -89,34 +89,34 @@ Given my self-imposed dire straits of a timeline, if I wanted to have any hope w
 ---
 config:
   logLevel: 'debug'
-  theme: 'base'
+  theme: 'default'
   gitGraph:
     showBranches: true
     mainBranchName: 'architecture'
     mainBranchOrder: 6
 ---
       gitGraph TB:
-        commit id: "idea"
-        commit id: "figured it out"
+        commit id: "idea "
+        commit id: "figured it out "
         branch design order: 4
         checkout design
-        commit id: 'basic RTL'
+        commit id: 'basic RTL '
         branch simulation  order: 5
         checkout simulation 
-        commit id: 'this RTL is broken'
+        commit id: 'this RTL is broken '
         checkout design 
-        commit id: 'starts to work'
+        commit id: 'starts to work '
         branch implementation  order: 3
         checkout implementation
-        commit id: 'RIP timing'
-        commit id: 'RIP area'
+        commit id: 'RIP timing '
+        commit id: 'RIP area '
         checkout design
-        commit id: 'looking good'
+        commit id: 'looking good '
         branch emulation  order: 2
         checkout emulation
-        commit id: 'bitstream aquired'
+        commit id: 'bitstream aquired '
         branch firmware
-        commit id: 'firmware bringup'
+        commit id: 'firmware bringup '
         checkout emulation
         merge firmware
         checkout design
@@ -124,7 +124,7 @@ config:
         merge simulation
         checkout implementation
         merge design
-        commit id: 'tapeout!'
+        commit id: 'tapeout! '
 {{< /mermaid >}}
 
 - architecture: what I need to build and how components would interface with one another.  
