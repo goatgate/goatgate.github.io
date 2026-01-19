@@ -305,6 +305,10 @@ In order to help better illustrate this point, I would like to bring your attent
 
 An added bonus is that this animation is also of a 2×2 systolic array, such that it shares the same data with the same arrival constraints as my accelerator.
 
+
+Credit : Pan, William. (2025). Systolic Array Simulator. GitHub Repository.\
+[https://github.com/wp4032/william-pan.com](https://github.com/wp4032/william-pan.com)
+
 {{< alert "circle-info" >}}
 
 This animation is not a carbon copy of my accelerator. Rather, readers should use this animation as a tool to better understand how data flows in a 
