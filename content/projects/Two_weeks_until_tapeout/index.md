@@ -213,15 +213,15 @@ This system is broken in two main parts :
 - the compute units  
 - the main array controller  
 
-#### Compute units
+### Compute units
 
 Since this is a 2×2 systolic array, there are four compute units. Each unit takes in an 8 bit signed integer and performs a multiply, addition, and a clamping operation, producing 8 bit signed integers. 
 
-##### Multiplication
+#### Multiplication
 
 The multiply is done using a custom (from scratch) implementation of a Booth Radix-4 multiplier with Wallace trees. 
 
-This multiplier architecture strikes a good balance between area, power and performance, and can be regarded as the multiplier equivalent of what "rental white"™[1]  is to interior design.
+This multiplier architecture strikes a good balance between area, power and performance, and can be regarded as the multiplier equivalent of what "Rental White™"[1]  is to interior design.
 
 
 Meaning it is a solid, well rounded from a PPA’s perspective, multiplier option, that without being anything novel or groundbreaking, is probably good enough for your use case. (And given my +2ns of worst negative slack, and comfortable area occupancy, it was plenty good enough for mine.)
@@ -238,21 +238,36 @@ If you are looking for a good explanation of this multiplier and its optimizatio
 
 {{< /alert >}} 
 
-##### Clamping
+#### Clamping
 
 The clamping operation occurs after both the multiply and addition operations. At which point the data is now 17 bit wide, and since we want to prevent our data size from exploding, the clamping operation is needed to clamp the outgoing data back down to eight bits.
 
 {{< katex >}}
 
-$$  
-clamp_{i8}(c_{(t,x,y)}) = \begin{cases}
-   127 &\text{if } c_{(t,x,y}) > 127\\
-   c_{(t,x,y)} &\text{if } c_{(t,x,y)} \in [-128,127] \\
-    -128 &\text{if } c_{(t,x,y}) < -128\\
+$$
+clamp_{i8}(x) = \begin{cases}
+    127 &\text{if } x > 127 \\
+     x &\text{if } x \in [-128,127] \\
+    -128 &\text{if } x < -128 \\
 \end{cases}
 $$
 
-##### In place weight storage
+$$
+x = \begin{cases}
+   a &\text{if } b \\
+   c &\text{if } d
+\end{cases}
+$$
+$$  
+clamp_{i8}(x) = 
+\begin{cases}
+   127 &\text{if } x > 127\\
+   x &\text{if } x \in [-128,127] \\
+    -128 &\text{if } x < -128\\
+\end{cases}
+$$
+
+#### In place weight storage
 
 Given that the weights have high temporal and spatial locality, meaning the same set of weights can be reused over multiple unique input data matrices, in order to save on bandwidth, the choice was made to store an 8 bit weight in place inside of each unit. 
 
@@ -260,7 +275,7 @@ A separate control sequence allows the user to load a new set of weights inside 
 
 
 
-#### Array controller 
+### Array controller 
 
 Given the way in which the matrix matrix multiplication is performed using a systolic array, the input data matrix needs to be shaped and fed to the array in a staged manner. 
 
@@ -487,16 +502,18 @@ Did I mention OpenOCD has great support for JTAG?
 
 If I wasn't gonna get access to the official spec on how JTAG is expected to behave, plan B was to let my implementation be guided by how OpenOCD expected JTAG to behave. 
 
-To the purists clutching their pearls flabbergasted by the idea of not implementing the spec: I’m not sorry. But if you do have the official JTAG spec here is my /gc[email\](mailto:julia.desmazes@gmail.com).  
+To the purists clutching their pearls flabbergasted by the idea of not implementing the spec: I’m not sorry. But if you do have the official JTAG spec here is my [email](mailto:julia.desmazes@gmail.com).  
+
 In practice, whenever OpenOCD flagged my JTAG behavior as problematic, I assumed that my implementation was at fault. And trust me, there were issues. 
 
-I called this "designed by support"TM.
+I called this "Designed By SupportTM".
 
 Then came the matter of supporting my custom JTAG TAP and its unholy instructions. 
 
 Luckily for me, the OpenOCD allows you to finetune its behavior, through custom TCL scripts  (did I mention I have PTSD and now love TCL?). 
 
-Luckily, having already gone through the pain of learning to create custom OpenOCD scripts during my [Alibaba accelerator salvage project](https://essenceia.github.io/projects/alibaba_cloud_fpga/)), this was a breeze./gc\  
+Luckily, having already gone through the pain of learning to create custom OpenOCD scripts during my [Alibaba accelerator salvage project](https://essenceia.github.io/projects/alibaba_cloud_fpga/)), this was a breeze.
+ 
 These custom scripts allowed me to bring up my custom JTAG TAP and even allow me to add support for my own custom instructions.
 
 The script can be found [here](https://github.com/Essenceia/Systolic_MAC_with_DFT/blob/main/jtag/openocd.cfg)), and here is a log of me interfacing with this custom accelerator during emulation:
@@ -513,7 +530,7 @@ Info : clock speed 2000 kHz
 Info : JTAG tap: tpu.tap tap/device found: 0x1beef0d7 (mfg: 0x06b (Transwitch), part: 0xbeef, ver: 0x1)  
 ```
   
-Readers having reached enlightenment in their level of familiarity with the JTAG protocol might notice that the /gc[chip actually advertises itself as an Nvidia accelerator (mfg 0x06b.\](https://github.com/openocd-org/openocd/blob/587c7831033cda2c5aa683d18a183df52b631004/src/helper/jep106.inc\#L497)
+Readers having reached enlightenment in their level of familiarity with the JTAG protocol might notice that the [chip actually advertises itself as an Nvidia accelerator (mfg `0x06b`.)](https://github.com/openocd-org/openocd/blob/587c7831033cda2c5aa683d18a183df52b631004/src/helper/jep106.inc#L497)
 
 ## Conclusion
 
