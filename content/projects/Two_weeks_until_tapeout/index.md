@@ -85,6 +85,48 @@ because I spent the first 4 days reeling from the after effects of my previous t
 
 Given my self-imposed dire straits of a timeline, if I wanted to have any hope whatsoever of meeting the tapeout deadline I needed a battle plan: here is the roadmap.
 
+{{< mermaid >}}
+---
+config:
+  logLevel: 'debug'
+  theme: 'base'
+  gitGraph:
+    showBranches: true
+    mainBranchName: 'architecture'
+    mainBranchOrder: 6
+---
+      gitGraph TB:
+        commit id: "idea"
+        commit id: "figured it out"
+        branch design order: 4
+        checkout design
+        commit id: 'basic RTL'
+        branch simulation  order: 5
+        checkout simulation 
+        commit id: 'this RTL is broken'
+        checkout design 
+        commit id: 'starts to work'
+        branch implementation  order: 3
+        checkout implementation
+        commit id: 'RIP timing'
+        commit id: 'RIP area'
+        checkout design
+        commit id: 'looking good'
+        branch emulation  order: 2
+        checkout emulation
+        commit id: 'bitstream aquired'
+        branch firmware
+        commit id: 'firmware bringup'
+        checkout emulation
+        merge firmware
+        checkout design
+        merge emulation
+        merge simulation
+        checkout implementation
+        merge design
+        commit id: 'tapeout!'
+{{< /mermaid >}}
+
 - architecture: what I need to build and how components would interface with one another.  
 - design: where most of the RTL design takes place.   
 - simulation: I write tests for simulating and validating that my design is behaving correctly and without any identifiable bugs. I used the classic Cocotb wrapper around iverilog for this.  
