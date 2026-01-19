@@ -12,13 +12,15 @@ showTableOfContents: true
 
 As anyone that hasn’t been living under a rock might have heard, AI accelerators are the coolest kids in town these days. And although I have never been part of the "in" crowd, this time at least, I get the appeal. 
 
-So when the opportunity arose to join an experimental shuttle using global foundries 180nm for FREE I jumped onto the opportunity and designed my own JTAG/gc! 
+So when the opportunity arose to join an experimental shuttle using global foundries 180nm for FREE I jumped onto the opportunity and designed my own JTAG! 
 
 …
 
 I’m sorry? Is this not what you were expecting? 
 
-Frankly, I would love to tell you a great story about how I went into this wanting to design a free and open source silicon proven AI accelerator that the community could freely extend and re-use in their own projects. But in truth this project started out first as me wanting to design some far less sexy, in-silicon debug infrastructure and only later came to include the systolic matrix matrix multiplication accelerator … to serve as the design under test. No wonder I was never one of the cool kids. 
+Frankly, I would love to tell you a great story about how I went into this wanting to design a free and open source silicon proven AI accelerator that the community could freely extend and re-use in their own projects. But in truth this project started out first as me wanting to design some far less sexy, in-silicon debug infrastructure and only later came to include the systolic matrix matrix multiplication accelerator … to serve as the design under test. 
+
+No wonder I was never one of the cool kids. 
 
 Also, I’m designing everything from scratch and have only two weeks left, welcome to the crunch. 
 
@@ -32,7 +34,7 @@ If you are looking for a more formal overview of this ASIC, you can find the dat
 
 ### Experimental shuttle 
 
-Once again this tapeout was done as part of a Tiny Tapeout shuttle, but this time, it went out as part of the experimental shuttle. 
+Once again this tapeout was done as part of a Tiny Tapeout shuttle, but this time, it went out as not part of a public but an experimental shuttle. 
 
 {{< alert "heart" >}} 
 
@@ -40,11 +42,11 @@ You can learn more about the awesome Tiny Tapeout shuttle programs at the offici
 
 {{< /alert >}}
 
-These experimental shuttles are used as testing grounds for new nodes and flows and are used to iron out issues before opening up the public. 
+These experimental shuttles are used as testing grounds for new nodes and flows in order to iron out issues before they are opened to the public. 
 
 Participation in these experimental shuttles is commonly reserved to contributors having previously submitted to Tiny Tapeout. 
 
-This limitation was set in place in order to help select for veteran designers as these experimental shuttles are used as testing grounds and the final chip doesn't feature the same level of inter design isolation as in a public tapeout.
+This limitation was set in place in order to help select for veteran designers as these experimental tapeout typically have less stable tooling and the final chip doesn't feature the same level of inter design isolation as in a public tapeout.
 
 Contributions to these shuttles are done with the understanding that the resulting chip might not be functional for some reason outside of the designers control. 
 
@@ -64,19 +66,22 @@ Given you need to have taped out a chip with Tiny Tapeout before to be eligible,
 
 ## Combo
 
-Before we start, let us acknowledge that what I am attempting to do, alone, if this were any normal corporate setting, this would be the deadline equivalent to a one way ticket straight to the ever-lengthening queue outside the gates of Hell. Do not try this at work! 
+Before we start, let us acknowledge what I am attempting to do, alone.\
+If this were any normal corporate setting, it would be the deadline equivalent to a one way ticket straight to the ever-lengthening queue outside the gates of Hell.\
+Do not try this at work! 
 
 Now that safety precautions are out of the way:
  
 Welcome to a tale of two designs. 
 
-The first, is the systolic array, at the heart of an AI inference accelerator, its function is to perform matrix-matrix multiplications. 
+The first, is the systolic array, typically found at the heart of any AI inference accelerator, its function is to perform matrix-matrix multiplications. 
 
 The other is our silicon debug infrastructure, namely the all ubiquitous JTAG TAP component. Its goal is to provide something to latch onto when my ASIC comes back as an expensive brick and I am frantically trying to figure out where I fucked up. Given I wish to trust it not to be broken, having something that is proven early is very important since my masterplan is to slap it on all my future tapeouts.
 
 ## Project Roadmap
 
-Alright, I have to admit something: ~~I embellished reality in order to make myself look good~~ I lied. Although initially I had 2 weeks to do this tapeout, but because I then spent the first 4 days reeling from the after effects of my previous tapeout (aka: sleeping, going outside and talking to another human being) and "deciding on a technical direction" which is corporate speech for describing a mixture between "procrastinating" and "figuring out what I could build without sacrificing too much of my remaining sanity", I now had 10 days left. You’re welcome. 
+Alright, I have to admit something: ~~I embellished reality in order to make myself look good~~ I lied. Although initially I had 2 weeks to do this tapeout, 
+because I spent the first 4 days reeling from the after effects of my previous tapeout (aka: sleeping, going outside and talking to another human being) and "deciding on a technical direction" which is corporate speech for describing a mixture between "procrastinating" and "figuring out what I could build without sacrificing too much of my remaining sanity", I now had 10 days left. You’re welcome. 
 
 Given my self-imposed dire straits of a timeline, if I wanted to have any hope whatsoever of meeting the tapeout deadline I needed a battle plan: here is the roadmap.
 
@@ -100,14 +105,17 @@ But, let us not delude ourselves, the saving grace of this terrible idea was rea
 
 {{< alert "circle-info" >}}
 
-The following section assumes readers are already familiar with the Open Source Silicon ecosystem. /gc 
-For those not already familiar with Tiny Tapeout, Librelane and OpenRoad, you can find a short description of these [in my previous  hashing accelerator ASIC article, where I introduce some of the great tools that the open source silicon ecosystem has created. ](https://essenceia.github.io/projects/blake2s_hashing_accelerator_a_solo_tapeout_journey/#open-source-silicon))
+The following section assumes readers are already familiar with the Open Source Silicon ecosystem. 
+ 
+For those not already familiar with Tiny Tapeout, Librelane and OpenRoad, you can find a short description of these [in my previous  hashing accelerator ASIC article, where I introduce some of the great tools that the open source silicon ecosystem has created. ](https://essenceia.github.io/projects/blake2s_hashing_accelerator_a_solo_tapeout_journey/#open-source-silicon)
 
 {{< /alert >}}
 
 [The OpenROAD project](https://openroad.readthedocs.io/en/latest/) was conceived with a no-human-in-the-loop (NHIL) target, and the goal of enabling 24-hour-or-less design turnaround times.
  
-[Librelane](https://librelane.readthedocs.io/en/latest/), the master coordinator of the flow itself, brings together OpenRoad, Yoysy, ABC, Magic, and many more amazing open source tools, building on top of this philosophy. Created a process that takes you from your verilog and a few configurations all the way to the tapeout ready artifacts, in an extremely streamlined and fast fashion, requiring minimal human intervention.
+[Librelane](https://librelane.readthedocs.io/en/latest/), the master coordinator of the flow itself, brings together 
+OpenRoad, Yoysy, ABC, Magic, and many more amazing open source tools, building on top of this philosophy. 
+Creating a process that takes you from your verilog and a few configurations all the way to the tapeout ready artifacts, in an extremely streamlined and fast fashion, requiring minimal human intervention.
 
 Tiny Tapeout then completes the loop, running your testbenches, both the classic and the timing annotated post implementation versions (using the free to use but not open source CVC simulator), on top of the entire implementation, and then allowing you to automatically   upload your GDSII for integration into the shuttle chip.
 
@@ -120,7 +128,7 @@ Thus, not only was I building on top of a legacy of efficient design flows, but 
  
 A classic example would be my FPGA build flow used for emulation. It only requires a single command to create the Vivado project, read all the rtl and constraint files, synthesize, optionally add an ILA core and connect any wires marked for debug to it, implement, and then flash the bitstream :
 ```sh   
-make fpga/gc_prog debug=1  
+make fpga_prog debug=1  
 ```
 
 Essentially, the bottleneck to making this design, from scratch in 10 days, wasn’t going to be the tools, but the squishy human between the chair and the keyboard. 
@@ -139,14 +147,23 @@ Without further ado, let's talk design !
 
 The goal of this systolic array is to perform a 2×2 matrix-matrix multiply on 8-bit integer numbers. 
 
-Without going too much into detail on why systolic arrays are the recurring stars at the heart of modern AI inference accelerators, their main strength is achieving a high ratio of compute to everything else. And since memory operations are the most expensive family of operations by far, a higher compute to memory operation ratio. 
+Without going too much into detail on why systolic arrays are the recurring stars at the heart of modern AI inference accelerators, 
+their main strength is achieving a high ratio of compute to everything else. And since memory operations are the most 
+expensive family of operations by far, a higher ratio of compute to memory operations. 
 
-Data is recirculated directly within the array and reused across multiple consecutive operations rather than being repeatedly fetched/written from/to memory. This matters because memory accesses are expensive. SRAM accesses cost time and significant power, while DRAM accesses cost eternities of time and are egregious amounts of power. Compute operations, even these perky 32 bit floating point multiplications, are by comparison cheap. 
+Data is recirculated directly within the array and reused across multiple consecutive operations rather than 
+being repeatedly fetched/written from/to memory. This matters because memory accesses are expensive.
+ SRAM accesses cost time and significant power, while DRAM accesses cost eternities of time and egregious amounts of power. 
+Compute operations, even 64 bit floating point multiplications, are by comparison, cheap. 
 
-Thus, the larger the systolic array, the deeper the chain of compute , the better this compute to memory ratio becomes.
+Thus, the larger the systolic array, the deeper the chain of compute, the better this compute to memory ratio becomes.
 
 #### Energy ratio 
 
+{{< alert "info-cirle" >}}
+The following sub-section is me geeking out on power consumption numbers. 
+If you don't have a deeply engrained passion for discussing pJ you can safely skip it, I won't judge you. 
+{{< /alert >}}
 As an illustrative example of this evolution of compute ratios, let us compare the power cost of 64 bit floating point multiply-add (MAC) operations in a hypothetical systolic array designed on a 45nm node running at 0.9V.
  
 Compared with the energy expenditure needed to access this data using 256 bit wide reads to the 16nm DRAM. DRAM access costs will include the 10mm of wire, interface and access costs.
@@ -167,7 +184,10 @@ source: [ENERGY PROPORTIONAL MEMORY SYSTEMS](https://chipgen.stanford.edu/people
 
 <iframe width="100%" height="410" seamless frameborder="0" scrolling="yes" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQUBNKY6p002MAHfx2ZwM7ma6JbIT4_ikELe73NfP3mZw15dAKJaMlBQCjc-J-Zr8gtkhlDrVvrEvrx/pubchart?oid=727837197&amp;format=interactive"></iframe>
 
-Even though I purposefully chose 64 bit floats, the most energy intensive arithmetic operation, it still required a 16x16 systolic array before the cost of compute started exceeding the cost of the initial DRAM value read. 
+Even though I purposefully chose 64 bit floats, the most energy intensive arithmetic operation, 
+we still required a 16x16 systolic array before the cost of compute started exceeding the cost of the initial DRAM value reads.
+
+aka: For those not living in 2026, we have uncovered a new clue to the mystery of where all the DRAM chips have suddenly vanished to!  
 
 #### Scaling 
 
@@ -204,11 +224,11 @@ This time, the limitation was actually imposed by the experimental nature of thi
  
 Firstly, the flow didn't initially support these macros out of the box. More specifically in the way they were laid out, which led to a slew of DRC failures that needed to be fixed. 
  
-Additionally, this experimental shuttle didn’t provide individual project power gating. As such, integrating this SRAM macro was commonly deemed not the best idea, and the community collectively agreed to wait for a future shuttle, which would include per-project macro power gating, before including it. 
+Secondly, this experimental shuttle didn’t provide individual project power gating. As such, integrating this SRAM macro was commonly deemed not the best idea, and the community collectively agreed to wait for a future shuttle, which would include per-project macro power gating, before including it. 
 
 ### Design Details
 
-This system is broken in two main parts : 
+This system is broken into two parts : 
 
 - the compute units  
 - the main array controller  
@@ -277,7 +297,7 @@ A separate control sequence allows the user to load a new set of weights inside 
 
 ### Array controller 
 
-Given the way in which the matrix matrix multiplication is performed using a systolic array, the input data matrix needs to be shaped and fed to the array in a staged manner. 
+Given the way in which the matrix matrix multiplication is performed using a systolic array, the input data matrix needs to be shaped and fed to the array in a staggered manner. 
 
 Understandably readers might not instinctively get what I mean by "the data needs to be shaped".
 
@@ -287,7 +307,8 @@ An added bonus is that this animation is also of a 2×2 systolic array, such tha
 
 {{< alert "circle-info" >}}
 
-This animation is not a carbon copy of my accelerator. Rather, readers should use this animation as a tool to better understand how data flows in a systolic way and how it results in the computation of a matrix-matrix multiplication. For the sake of completeness, I would like to point out the major differences with my implementation:
+This animation is not a carbon copy of my accelerator. Rather, readers should use this animation as a tool to better understand how data flows in a 
+systolic array and how it results in the computation of a matrix-matrix multiplication. For the sake of completeness, I would like to point out the major differences with my implementation:
 
 - this animation uses floating-point numbers, I am using 8-bit integers
 - There is no clamping step
