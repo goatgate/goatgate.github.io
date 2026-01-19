@@ -610,19 +610,17 @@ It's good to have dreams.
 
 ## Conclusion
 
-This project, as expected, showed me again the immense technical challenge that ASIC design fundamentally is. That is, to me, a major part of the appeal for it : we are lucky enough to be in a time where one single person can think of a design, and have it produced in the form of an actual chip.
+My current long term objective is to tape out my own chips.
 
-Credits for this go to the opensource tooling. I am still amazed at the quality of the tools that we have at hand. The fact that they not only exist, but work, and in a reliable manner, is impressive given how hard the problems that they solve are. And the fact that they can be successfully run on your own machine by running a single command almost seems magical.
+There are many parts of the ASIC design that for now are abstracted to me by TinyTapeout, and my objective is to master those domains too to be able to do the same thing, but this time, alone, without the need to be part of a shuttle.
 
-This allows projects like this one to exist, and even if they are indeed hard and challenging on the technical side, they are definitely worth the effort, given how much technical knowledge they give you.
+This project was a battle against time. In my previous project I had more time but a lot to discover. This time I wanted to reapply the same process, but in two weeks. It was a big rush and the intensity non-linearly increased as the deadline was coming.
 
-My current long term objective, which everyday becomes less of a dream thanks to the tooling, is to tape out my own chips. I want to master all aspects of it, and to do this, I need to get gradually exposed to more and more complex problems. Projects like this one, exist for this very purpose.
+But in the end, I managed to make it fit and I'm honestly very proud of it.
 
-This project was, before everything, a battle against time. In my initial project I (initially) had a lot of time, but had to learn everything. Here, it was different. I wanted those two weeks to crystalize what I had learned and redo those steps but this time, more rapidly to get used to it.
+One of the big difficulties was to not get side-tracked. Even if it was frustrating, I had to get only the minimal set of features to get the project rolling. The temptation to spend time to add more features to both the systolic array and the DFT system was big.
 
-One of the big difficulties was to not get side-tracked. I had to get only the minimal set of features to get the project rolling, and at times, that felt very frustrating, and I felt very tempted to spend time to add more features to both the systolic array and the DFT system. The good news is that now, I can finally lash out !!
-
-As such, the next project will likely feature an evolution of both concepts. First, I'd like to finally take a shot at an old adversary of mine, the Floating Point representation, less for the TOPS->FLOPS bragging rights than for a chance of understanding the technicalities of it on the HW side. At the same time, I will start building on top of my scanchain implementation, the long term goal being to have a convenient way to extract the state of all flops in my system, and report it in a human readable way.
+The good news is that now, I can finally lash out !! As such, the next project will likely feature an evolution of both concepts. First, I'd like to finally take a shot at an old adversary of mine, the Floating Point representation, less for the TOPS->FLOPS bragging rights than for a chance of understanding the technicalities of it on the HW side. At the same time, I will start building on top of my scanchain implementation, the long term goal being to have a convenient way to extract the state of all flops in my system, and report it in a human readable way.
 
 I would like to finish with a thanks to a company which has not been sponsoring me in any way, and that are totally unaware of my existence, but who never fails to provide the level of reward that I need after an all nighter spent trying to wrap up my design.
 
