@@ -305,9 +305,12 @@ In order to help better illustrate this point, I would like to bring your attent
 
 An added bonus is that this animation is also of a 2×2 systolic array, such that it shares the same data with the same arrival constraints as my accelerator.
 
+{{< figure
+    src="systolic_array.gif"
+    caption="Credit : Pan, William. (2025). Systolic Array Simulator. GitHub Repository.\[https://github.com/wp4032/william-pan.com](https://github.com/wp4032/william-pan.com)"
+    alt=""
+>}}
 
-Credit : Pan, William. (2025). Systolic Array Simulator. GitHub Repository.\
-[https://github.com/wp4032/william-pan.com](https://github.com/wp4032/william-pan.com)
 
 {{< alert "circle-info" >}}
 
@@ -315,8 +318,8 @@ This animation is not a carbon copy of my accelerator. Rather, readers should us
 systolic array and how it results in the computation of a matrix-matrix multiplication. For the sake of completeness, I would like to point out the major differences with my implementation:
 
 - this animation uses floating-point numbers, I am using 8-bit integers
-- There is no clamping step
-- The timings are not entirely identical. In my accelerator, many more operations occur on the same cycle. Granted, this was probably done in an effort to help make the animation more legible.
+- there is no clamping step
+- the timings are not entirely identical. In my accelerator, many more operations occur on the same cycle. Granted, this was probably done in an effort to help make the animation more legible.
 
 {{< /alert >}} 
 
@@ -348,7 +351,8 @@ Although this will necessitate to re-adapt parts of the firmware for the new dev
 
 The second major component of this design and admittedly the actual principle piece of this ASIC is the JTAG TAP. 
 
-As stated earlier when ASIC comes back as a glorified paperweight I will suddenly have a strong need for some kind of harder block, providing some in silicon observability. 
+As stated earlier when my ASIC comes back as a glorified paperweight I will suddenly have a strong and immediate need for some 
+kind of hardware block providing some in silicon observability. 
 
 This is absolutely crucial, as it isn't a question of if but when one of my ASIC will have hardware issues.   
 And, when that day comes, not having a view of the internal behavior will only make it that much more painful to identify the root issue in order to fix it for the upcoming generation.
@@ -370,21 +374,28 @@ Required instructions :
 
 Custom instructions : 
 
-- `USER_REG`, opcode `0x3`, custom instruction used to probe the internal register
+- `USER_REG`, opcode `0x3`, custom instruction used to probe the internal registers
 
 The systolic array is quite a deep structure in the sense that the data is directly reused as it is recirculated within the systolic array. 
 
-As such, it is very easy to lose track of what the internal state is, having only the input and output observable to the end user. Although this might stay manageable with a 2 x 2 array as structure grows larger, it starts becoming more and more problematic. 
+As such, it is very easy to lose track of what the internal state is, having only the input and output observable to the user. 
+Although this might stay manageable with a 2 x 2 array.
+As the structure grows larger, this will start to become more and more of an issue. 
 
-In order to help address this future user issue in this tapeout, I added the custom `USER_REG` JTAG instruction to read the current state of a target computer units internal registers. 
+In order to help address this future issue, I added the custom `USER_REG` JTAG 
+instruction to read the current state of a target compute units internal registers. 
 
-[Link to the datasheet of the `USER_REG` instruction](https://github.com/Essenceia/Systolic_MAC_with_DFT/tree/main?tab=readme-ov-file#user_reg)
+[Link to the datasheet of the `USER_REG` instruction.](https://github.com/Essenceia/Systolic_MAC_with_DFT/tree/main?tab=readme-ov-file#user_reg)
 
 ### Design 
 
-The JTAG TAP design itself is rather quite straightforward as JTAG was conceived as a hardware, first protocol and this shows when implementing it. The design clearly flows from the JTAG specification to the RTL( unlike you BLAKE2 I am looking at you/gc!), as such I do not think it is worthwhile to discuss its design in detail.
+The JTAG TAP design itself is quite straightforward as JTAG was conceived as a hardware first protocol, and this shows 
+in its implementation. The design clearly flows from the JTAG specification to the RTL( unlike you BLAKE2 I am looking at you!).
+As such I do not think it is worthwhile to discuss it in detail.
 
-What does makes this design more interesting is how the JTAG and the systolic array live in two different clock domains. Making this accelerator have not one but two separate clock trees. On the altar of this noble cause, I sacrificed one of my precious data input pins to serve as the JTAG clock in input (TCK).
+What makes this design more interesting is how the JTAG and the systolic array live in two different clock domains. Making this accelerator have not one but two separate clock trees. 
+
+On the altar of this noble cause, I sacrificed one of my precious data input pins to serve as the JTAG clock input (TCK).
 
 {{< figure  
 	src="array_clk.webp"  
