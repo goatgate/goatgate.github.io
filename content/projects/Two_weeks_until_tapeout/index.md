@@ -114,7 +114,7 @@ config:
         commit id: 'looking good '
         branch emulation  order: 2
         checkout emulation
-        commit id: 'bitstream aquired '
+        commit id: 'bitstream acquired '
         branch firmware
         commit id: 'firmware bringup '
         checkout emulation
