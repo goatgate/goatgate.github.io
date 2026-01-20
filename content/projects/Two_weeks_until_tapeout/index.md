@@ -438,10 +438,7 @@ instruction to read the current state of a target compute units internal registe
 ### Design 
 
 The JTAG TAP design itself is quite straightforward as JTAG was conceived as a hardware first protocol, and this shows 
-in its implementation. The design clearly flows from the JTAG specification to the RTL (n{cases}
--x, & \text{if } x < 0 \\\\
-\phantom{-}x, & \text{if } x \ge 0
-\end{cases}unlike you BLAKE2 I am looking at you!).
+in its implementation. The design clearly flows from the JTAG specification to the RTL (unlike you BLAKE2 I am looking at you!).
 As such I do not think it is worthwhile to discuss it in detail.
 
 What makes this design more interesting is how the JTAG and the systolic array live in two different clock domains. Making this accelerator have not one but two separate clock trees. 
