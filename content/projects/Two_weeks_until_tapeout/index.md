@@ -146,22 +146,22 @@ The most astute readers might have noticed that this grand strategy is  pretty m
 
 ### Flow saves the day
 
-So, why am I doing this to myself? Well, self delusion is a powerful force, and it was telling me this timeline would be possible if I leveraged my previous experience with the Tiny Tapeout/Librelane/OpenRoad flows, my existing personal linting/simulation/fpga/firmware flows, my existing code bases, and my own ~~ingrained knowledge of the dark arts~~ experience. 
+So, why am I doing this to myself? Well, self delusion is a powerful force, and it was telling me this timeline would be possible if I leveraged my previous experience with the Tiny Tapeout/Librelane/OpenROAD flows, my existing personal linting/simulation/fpga/firmware flows, my existing code bases, and my own ~~ingrained knowledge of the dark arts~~ experience. 
 
-But, let us not delude ourselves, the saving grace of this terrible idea was really just how great the Tiny Tapeout/Librelane/OpenRoad ASIC flow is. 
+But, let us not delude ourselves, the saving grace of this terrible idea was really just how great the Tiny Tapeout/Librelane/OpenROAD ASIC flow is. 
 
 {{< alert "circle-info" >}}
 
 The following section assumes readers are already familiar with the Open Source Silicon ecosystem. 
  
-For those not already familiar with Tiny Tapeout, Librelane and OpenRoad, you can find a short description of these [in my previous  hashing accelerator ASIC article, where I introduce some of the great tools that the open source silicon ecosystem has created. ](https://essenceia.github.io/projects/blake2s_hashing_accelerator_a_solo_tapeout_journey/#open-source-silicon)
+For those not already familiar with Tiny Tapeout, Librelane and OpenROAD, you can find a short description of these [in my previous  hashing accelerator ASIC article, where I introduce some of the great tools that the open source silicon ecosystem has created. ](https://essenceia.github.io/projects/blake2s_hashing_accelerator_a_solo_tapeout_journey/#open-source-silicon)
 
 {{< /alert >}}
 
 [The OpenROAD project](https://openroad.readthedocs.io/en/latest/) was conceived with a no-human-in-the-loop (NHIL) target, and the goal of enabling 24-hour-or-less design turnaround times.
  
 [Librelane](https://librelane.readthedocs.io/en/latest/), the master coordinator of the flow itself, brings together 
-OpenRoad, Yoysy, ABC, Magic, and many more amazing open source tools, building on top of this philosophy. 
+OpenROAD, Yoysy, ABC, Magic, and many more amazing open source tools, building on top of this philosophy. 
 Creating a process that takes you from your verilog and a few configurations all the way to the tapeout ready artifacts, in an extremely streamlined and fast fashion, requiring minimal human intervention.
 
 Tiny Tapeout then completes the loop, running your testbenches, both the classic and the timing annotated post implementation versions (using the free to use but not open source CVC simulator), on top of the entire implementation, and then allowing you to automatically   upload your GDSII for integration into the shuttle chip.
