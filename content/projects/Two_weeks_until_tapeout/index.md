@@ -577,7 +577,7 @@ set_clock_groups -asynchronous -group $clock_port -group $jtag_clock_port
 ```
 
 Because the official JTAG spec lives behind the impregnable IEEE paywall, a castle in which I am not permitted
-to set foot as a result of not having payed its lord my dues, the verification of the JTAG TAP was actually quite interesting.
+to set foot as a result of not having paid its lord my dues, the verification of the JTAG TAP was actually quite interesting.
 
 Since JTAG is such a common protocol, its easy to find free resources online to build a good mental model of the internal 
 FSM and TAP structure. 
@@ -631,7 +631,7 @@ This project was a battle against time. But making it fit in the end is somethin
 
 One of the big difficulties was to not get side-tracked. Even if it was frustrating,
  I had to commit to only adding the minimal set of features needed to get the project rolling. 
-And trust me, the temptation to add, just that one extra little tini tiny feature, either to the systolic array or the debug system,
+And trust me, the temptation to add, just that one extra little teeny-tiny feature, either to the systolic array or the debug system,
 was excruciating.
 
 The good news is that, with this upcoming tapeout ([v2 has already started](https://github.com/Essenceia/DFT_FPGA_Emulation)), I can finally lash out !! 
